@@ -1,0 +1,205 @@
+<html>
+<head>
+<title>Oregon Voting Data Map</title>
+<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+<link rel="stylesheet" href="/static/css/bootstrap.css" />
+<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+<script src="/static/js/jquery.min.js"></script>
+<script src="/static/js/bootstrap.js"></script>
+<style>
+.legend {
+    line-height: 18px;
+    color: #555;
+}
+.legend i {
+    width: 18px;
+    height: 18px;
+    float: left;
+    margin-right: 8px;
+    opacity: 0.7;
+}
+</style>
+
+<script src="/static/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+    function getColor(d) {
+    return  d >= 0.8  ? '#33eb26' :
+            d >= 0.6  ? '#62f04d' :
+            d >= 0.4  ? '#8ff576' :
+            d >= 0.2  ? '#b8faa0' :
+            d >= 0.0  ? '#ddffcc' :
+            d >= -0.2 ? '#ffddcc' :
+            d >= -0.4 ? '#fab8a0' :
+            d >= -0.6 ? '#f58f76' :
+            d >= -0.8 ? '#f0624d' :
+            d >= -1   ? '#eb3326' :
+                        '#FFFFFF';
+    }
+
+    function style(feature) {
+        var total_votes = feature.properties.yes_votes + feature.properties.no_votes;
+        var difference = feature.properties.yes_votes - feature.properties.no_votes;
+
+        return {
+            fillColor: getColor(difference/total_votes),
+            weight: 2,
+            opacity: 1,
+            color: 'white',
+            dashArray: '3',
+            fillOpacity: 0.7
+        };
+    }
+
+    var counties_layer = {};
+    var map = L.map('map').setView([44, -120], 7)
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map)
+
+    var legend = L.control({position: 'bottomright'});
+
+    legend.onAdd = function (map) {
+
+        var div = L.DomUtil.create('div', 'info legend'),
+            grades = [
+                {value: 0.8, display: '100% &mdash; 80%'},
+                {value: 0.6, display: '80% &mdash; 60%'},
+                {value: 0.4, display: '60% &mdash; 40%'},
+                {value: 0.2, display: '40% &mdash; 20%'},
+                {value: 0,   display: '20% &mdash; 0%'},
+                {value: -0.2, display: '0% &mdash; -20%'},
+                {value: -0.4, display: '-20% &mdash; -40%'},
+                {value: -0.6, display: '-40% &mdash; -60%'},
+                {value: -0.8, display: '-60% &mdash; -80%'},
+                {value: -1,  display: '-80% &mdash; -100%'},
+            ],
+            labels = [];
+
+        // loop through our density intervals and generate a label with a colored square for each interval
+        $.each(grades, function(index, value){
+            div.innerHTML +=
+                '<i style="background:' + getColor(value.value) + '"></i> ' +
+                value.display + '<br>';
+        });
+
+        return div;
+    };
+
+    // Create our layer group
+    var county_layer = L.layerGroup().addTo(map);
+
+    legend.addTo(map);
+
+    $.ajax({
+        'url': '/counties.json',
+        'contentType': 'application/json',
+        'success': function(data){
+            county_layer.addLayer(L.geoJson(data, {
+                style: style,
+                onEachFeature: function(feature, layer){
+                    layer.bindPopup(
+                        '<b>County:</b> ' + feature.properties.name + '<br>' +
+                        '<b>Yes Votes:</b> ' + feature.properties.yes_votes + '<br>' +
+                        '<b>No Votes:</b> ' + feature.properties.no_votes
+                    );
+                }
+            }));
+        }
+    });
+
+    var description = $('select[name="measure"] option').first().data('description');
+    $('#description').text(description);
+
+    $('select[name="year"]').on('change', function(e){
+        var year = $(this).val();
+
+        $.ajax({
+            'url': '/measure-by-year',
+            'data': {year: year},
+            'success': function(data){
+                $('select[name="measure"] option').remove();
+                $.each(data.measures, function(index, value){
+                    $('select[name="measure"]').append(
+                        $('<option/>').val(value.number).text(
+                            'Measure '+value.number).data('description', value.description)
+                    );
+                });
+
+                var description = $('select[name="measure"] option').first().data('description');
+                $('#description').text(description);
+            },
+            'error': function(data){
+                alert("Error!!!! (try again)");
+            }
+        });
+    });
+
+    $('select[name="measure"]').on('change', function(e){
+        var description = $(this.options[this.selectedIndex]).data('description');
+        console.log(description);
+        $('#description').text(description);
+    });
+
+    $('#update').on('click', function(e){
+        county_layer.clearLayers();
+        var year = $('select[name="year"]').val();
+        var measure = $('select[name="measure"]').val();
+
+        $.ajax({
+            'url': '/counties.json',
+            'data': {year: year, measure: measure},
+            'contentType': 'application/json',
+            'success': function(data){
+                county_layer.addLayer(L.geoJson(data, {
+                    style: style,
+                    onEachFeature: function(feature, layer){
+                        layer.bindPopup(
+                            '<b>County:</b> ' + feature.properties.name + '<br>' +
+                            '<b>Yes Votes:</b> ' + feature.properties.yes_votes + '<br>' +
+                            '<b>No Votes:</b> ' + feature.properties.no_votes
+                        );
+                    }
+                }));
+            }
+        });
+    });
+});
+</script>
+</head>
+<body>
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-md-9">
+            <div id="map" style="height: 600px"></div>
+        </div>
+        <div class="col-md-3">
+            <h2>Controls</h2>
+            <div class="form-group">
+                <label>Year</label>
+                <select class="form-control" name="year">
+                    {% for year in years %}
+                    <option value="{{year}}">{{year}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Measure</label>
+                <select class="form-control" name="measure">
+                    {% for measure in measures %}
+                    <option value="{{measure.number}}" data-description="{{measure.description}}">
+                    Measure {{measure.number}}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button id="update" class="btn btn-primary">Update</button>
+            <hr>
+            <div class="well">
+                <b>Description:</b>
+                <span id="description"></span>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

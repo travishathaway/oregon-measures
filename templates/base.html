@@ -10,6 +10,8 @@
 .legend {
     line-height: 18px;
     color: #555;
+    background-color: white;
+    padding: 5px;
 }
 .legend i {
     width: 18px;
@@ -23,8 +25,9 @@
 <script src="/static/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
+    // Colors for our cholorpleth map
     function getColor(d) {
-    return  d >= 0.8  ? '#33eb26' :
+        return  d >= 0.8  ? '#33eb26' :
             d >= 0.6  ? '#62f04d' :
             d >= 0.4  ? '#8ff576' :
             d >= 0.2  ? '#b8faa0' :
@@ -37,6 +40,7 @@ $(document).ready(function(){
                         '#FFFFFF';
     }
 
+    // Styles the our MultiPolygons on the map.
     function style(feature) {
         var total_votes = feature.properties.yes_votes + feature.properties.no_votes;
         var difference = feature.properties.yes_votes - feature.properties.no_votes;
@@ -51,16 +55,42 @@ $(document).ready(function(){
         };
     }
 
+    // Based on year and measure, updates our map using the "county_layer" we have defined
+    function updateLayer(year, measure) {
+        $.ajax({
+            'url': '/counties.json',
+            'data': {year: year, measure: measure},
+            'contentType': 'application/json',
+            'success': function(data){
+                county_layer.addLayer(L.geoJson(data, {
+                    style: style,
+                    onEachFeature: function(feature, layer){
+                        var yes_votes = Number(feature.properties.yes_votes);
+                        var no_votes = Number(feature.properties.no_votes);
+                        layer.bindPopup(
+                            '<b>County:</b> ' + feature.properties.name + '<br>' +
+                            '<b>Yes Votes:</b> ' + yes_votes.toLocaleString() + '<br>' +
+                            '<b>No Votes:</b> ' + no_votes.toLocaleString()
+                        );
+                    }
+                }));
+            }
+        });
+    }
+
+    // Retreive our inital layer
+    updateLayer('2012-11-06', '83');
+
     var counties_layer = {};
     var map = L.map('map').setView([44, -120], 7)
     L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map)
 
+    // Create our map legend
     var legend = L.control({position: 'bottomright'});
 
     legend.onAdd = function (map) {
-
         var div = L.DomUtil.create('div', 'info legend'),
             grades = [
                 {value: 0.8, display: '100% &mdash; 80%'},
@@ -85,32 +115,18 @@ $(document).ready(function(){
 
         return div;
     };
-
-    // Create our layer group
-    var county_layer = L.layerGroup().addTo(map);
-
+    
+    // Add the legend to our map
     legend.addTo(map);
 
-    $.ajax({
-        'url': '/counties.json',
-        'contentType': 'application/json',
-        'success': function(data){
-            county_layer.addLayer(L.geoJson(data, {
-                style: style,
-                onEachFeature: function(feature, layer){
-                    layer.bindPopup(
-                        '<b>County:</b> ' + feature.properties.name + '<br>' +
-                        '<b>Yes Votes:</b> ' + feature.properties.yes_votes + '<br>' +
-                        '<b>No Votes:</b> ' + feature.properties.no_votes
-                    );
-                }
-            }));
-        }
-    });
+    // Create our layer group. We use this group to dynamically drop and add layers
+    var county_layer = L.layerGroup().addTo(map);
 
+    // Set the initial description of the ballot measure
     var description = $('select[name="measure"] option').first().data('description');
     $('#description').text(description);
 
+    // Setup Events
     $('select[name="year"]').on('change', function(e){
         var year = $(this).val();
 
@@ -128,42 +144,36 @@ $(document).ready(function(){
 
                 var description = $('select[name="measure"] option').first().data('description');
                 $('#description').text(description);
+
+                // Remove our current layer
+                county_layer.clearLayers();
+                
+                // Retreive selected layer
+                var year = $('select[name="year"]').val();
+                var measure = $('select[name="measure"]').val();
+                updateLayer(year, measure);
             },
             'error': function(data){
-                alert("Error!!!! (try again)");
+                alert("Error (try again)");
             }
         });
     });
 
+    // Event to update the description and layer based on measure choice
     $('select[name="measure"]').on('change', function(e){
+        // Update description
         var description = $(this.options[this.selectedIndex]).data('description');
-        console.log(description);
         $('#description').text(description);
-    });
 
-    $('#update').on('click', function(e){
+        // Remove our current layer
         county_layer.clearLayers();
+        
+        // Retreive selected layer
         var year = $('select[name="year"]').val();
         var measure = $('select[name="measure"]').val();
-
-        $.ajax({
-            'url': '/counties.json',
-            'data': {year: year, measure: measure},
-            'contentType': 'application/json',
-            'success': function(data){
-                county_layer.addLayer(L.geoJson(data, {
-                    style: style,
-                    onEachFeature: function(feature, layer){
-                        layer.bindPopup(
-                            '<b>County:</b> ' + feature.properties.name + '<br>' +
-                            '<b>Yes Votes:</b> ' + feature.properties.yes_votes + '<br>' +
-                            '<b>No Votes:</b> ' + feature.properties.no_votes
-                        );
-                    }
-                }));
-            }
-        });
+        updateLayer(year, measure);
     });
+
 });
 </script>
 </head>
@@ -192,8 +202,11 @@ $(document).ready(function(){
                     {% endfor %}
                 </select>
             </div>
-            <button id="update" class="btn btn-primary">Update</button>
             <hr>
+            <div class="alert alert-info">
+                <span class="glyphicon glyphicon-info-sign"></span>
+                Click each county to see the amount of "yes" and "no" votes for a measure
+            </div>
             <div class="well">
                 <b>Description:</b>
                 <span id="description"></span>

@@ -1,15 +1,35 @@
 import json
 import psycopg2
 
-from flask import Flask, render_template, Response, jsonify, request
+from flask import Flask, render_template, Response, jsonify, request, g
 
 app = Flask(__name__)
 app.debug = True
 
 
+def get_db():
+    db = getattr(g, '_database', None)
+    if db is None:
+        db = g._database = psycopg2.connect(
+            host='127.0.0.1',
+            port=5432,
+            user='thath',
+            password='thath',
+            dbname='thath'
+        ).cursor()
+        return db
+
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(g, '_database', None)
+    if db is not None:
+        db.close()
+
+
 @app.route('/')
 def index():
-
+    cur = get_db()
     cur.execute("SELECT distinct date FROM measure ORDER BY date")
     years = [row[0] for row in cur.fetchall()]
 
@@ -23,6 +43,7 @@ def index():
 
 @app.route('/measure-by-year')
 def measure_by_year():
+    cur = get_db()
     year = request.args.get('year', '')
 
     cur.execute("SELECT number, description FROM measure where date = %s ORDER BY number",
@@ -37,6 +58,7 @@ def measure_by_year():
 @app.route('/counties.json')
 def counties_json():
 
+    cur = get_db()
     year = request.args.get('year', '2012-11-06')
     measure = request.args.get('measure', '83')
 
@@ -73,16 +95,4 @@ def counties_json():
 
 
 if __name__ == '__main__':
-    conn = psycopg2.connect(
-        host='127.0.0.1',
-        port=5432,
-        user='thath',
-        password='thath',
-        dbname='thath'
-    )
-
-    cur = conn.cursor()
     app.run()
-    conn.commit()
-    cur.close()
-    conn.close()

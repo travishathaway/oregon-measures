@@ -1,5 +1,6 @@
 import json
 import psycopg2
+import os
 
 from flask import Flask, render_template, Response, jsonify, request, g
 
@@ -11,11 +12,11 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = psycopg2.connect(
-            host='127.0.0.1',
-            port=5432,
-            user='thath',
-            password='thath',
-            dbname='thath'
+            host=os.getenv('APP_DB_HOST', '127.0.0.1'),
+            port=os.getenv('APP_DB_PORT', 5432),
+            user=os.getenv('APP_DB_USER'),
+            password=os.getenv('APP_DB_PASS'),
+            dbname=os.getenv('APP_DB_NAME')
         ).cursor()
         return db
 

@@ -6,6 +6,8 @@ from flask import Flask, render_template, Response, jsonify, request, g
 
 app = Flask(__name__)
 app.debug = True
+base_url = os.getenv('APP_BASE_URL', '/')
+static_url = os.getenv('APP_STATIC_URL', '/static/')
 
 
 def get_db():
@@ -28,7 +30,7 @@ def close_connection(exception):
         db.close()
 
 
-@app.route('/')
+@app.route(base_url)
 def index():
     cur = get_db()
     cur.execute("SELECT distinct date FROM measure ORDER BY date")
@@ -39,10 +41,11 @@ def index():
     measures = [{'number': row[0], 'description': row[1]}
                 for row in cur.fetchall()]
 
-    return render_template('base.html', years=years, measures=measures)
+    return render_template('base.html', years=years, static_url=static_url,
+                           measures=measures, base_url=base_url)
 
 
-@app.route('/measure-by-year')
+@app.route('{}measure-by-year'.format(base_url))
 def measure_by_year():
     cur = get_db()
     year = request.args.get('year', '')
@@ -56,7 +59,7 @@ def measure_by_year():
     return jsonify({'measures': measures})
 
 
-@app.route('/counties.json')
+@app.route('{}counties.json'.format(base_url))
 def counties_json():
 
     cur = get_db()

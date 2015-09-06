@@ -1,11 +1,11 @@
 <html>
 <head>
 <title>Oregon Voting Data Map</title>
-<link rel="stylesheet" href="/static/css/leaflet.css" />
-<link rel="stylesheet" href="/static/css/bootstrap.css" />
-<script src="/static/js/leaflet.js"></script>
-<script src="/static/js/jquery.min.js"></script>
-<script src="/static/js/bootstrap.js"></script>
+<link rel="stylesheet" href="{{static_url}}/oregon_measures/css/leaflet.css" />
+<link rel="stylesheet" href="{{static_url}}/oregon_measures/css/bootstrap.css" />
+<script src="{{static_url}}/oregon_measures/js/leaflet.js"></script>
+<script src="{{static_url}}/oregon_measures/js/jquery.min.js"></script>
+<script src="{{static_url}}/oregon_measures/js/bootstrap.js"></script>
 <style>
 .legend {
     line-height: 18px;
@@ -22,7 +22,7 @@
 }
 </style>
 
-<script src="/static/jquery.min.js"></script>
+<script src="{{static_url}}/oregon_measures/jquery.min.js"></script>
 <script>
 $(document).ready(function(){
     // Colors for our cholorpleth map
@@ -58,7 +58,7 @@ $(document).ready(function(){
     // Based on year and measure, updates our map using the "county_layer" we have defined
     function updateLayer(year, measure) {
         $.ajax({
-            'url': '/counties.json',
+            'url': '{{base_url}}counties.json',
             'data': {year: year, measure: measure},
             'contentType': 'application/json',
             'success': function(data){
@@ -75,9 +75,6 @@ $(document).ready(function(){
                         layer.on('mouseover', function(e){
                             this.openPopup();
                         });
-                        layer.on('mouseout', function(e){
-                            this.closePopup();
-                        })
                     }
                 }));
             }
@@ -137,7 +134,7 @@ $(document).ready(function(){
         var year = $(this).val();
 
         $.ajax({
-            'url': '/measure-by-year',
+            'url': '{{base_url}}measure-by-year',
             'data': {year: year},
             'success': function(data){
                 $('select[name="measure"] option').remove();
@@ -190,7 +187,7 @@ $(document).ready(function(){
             <div id="map" style="height: 600px"></div>
         </div>
         <div class="col-md-3">
-            <h2>Controls</h2>
+            <h2>Oregon Measures</h2>
             <div class="form-group">
                 <label>Year</label>
                 <select class="form-control" name="year">

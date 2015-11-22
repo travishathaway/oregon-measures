@@ -5,7 +5,6 @@ import os
 from flask import Flask, render_template, Response, jsonify, request, g
 
 app = Flask(__name__)
-app.debug = True
 base_url = os.getenv('APP_BASE_URL', '/')
 static_url = os.getenv('APP_STATIC_URL', '/static/')
 

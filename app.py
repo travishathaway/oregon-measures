@@ -2,7 +2,9 @@ import json
 import psycopg2
 import os
 
-from flask import Flask, render_template, Response, jsonify, request, g
+from collections import defaultdict
+
+from flask import Flask, render_template, Response, jsonify, request, g, send_from_directory
 
 app = Flask(__name__)
 base_url = os.getenv('APP_BASE_URL', '/')
@@ -29,19 +31,19 @@ def close_connection(exception):
         db.close()
 
 
-@app.route(base_url)
-def index():
+@app.route('{}measure-by-year-all'.format(base_url))
+def measures_by_year_all():
     cur = get_db()
-    cur.execute("SELECT distinct date FROM measure ORDER BY date")
-    years = [row[0] for row in cur.fetchall()]
+    cur.execute('SELECT substr(date::text, 0, 5) as year, number, description FROM measure')
+    measures_by_year = defaultdict(list)
 
-    cur.execute("SELECT number, description FROM measure where date = %s ORDER BY number",
-                (years[0], ))
-    measures = [{'number': row[0], 'description': row[1]}
-                for row in cur.fetchall()]
+    for row in cur.fetchall():
+        measures_by_year[row[0]].append({
+            'measure': row[1],
+            'description': row[2].replace('Amends Constitution:', '')
+        })
 
-    return render_template('base.html', years=years, static_url=static_url,
-                           measures=measures, base_url=base_url)
+    return jsonify(measures_by_year)
 
 
 @app.route('{}measure-by-year'.format(base_url))
@@ -49,7 +51,7 @@ def measure_by_year():
     cur = get_db()
     year = request.args.get('year', '')
 
-    cur.execute("SELECT number, description FROM measure where date = %s ORDER BY number",
+    cur.execute("SELECT number, description FROM measure where substr(date::text, 0, 5) = %s ORDER BY number",
                 (year, ))
 
     measures = [{'number': row[0], 'description': row[1]}
@@ -62,8 +64,14 @@ def measure_by_year():
 def counties_json():
 
     cur = get_db()
-    year = request.args.get('year', '2012-11-06')
-    measure = request.args.get('measure', '83')
+    year = request.args.get('year')
+    measure = request.args.get('measure')
+
+    if not year and not measure:
+        return Response(
+            response='Parameters "year" and "measure" are required',
+            status=400
+        )
 
     cur.execute(
         '''
@@ -74,7 +82,11 @@ def counties_json():
                 SELECT 'Feature' As type
                 , ST_AsGeoJSON(ST_Simplify(lg.geom, 0.01))::json As geometry
                 , row_to_json(
-                    (SELECT l FROM (SELECT lg.gid, c.name, mbc.yes_votes, mbc.no_votes) As l)
+                    (SELECT l FROM (
+                        SELECT lg.gid, c.name, mbc.yes_votes, mbc.no_votes,
+                        (mbc.yes_votes - mbc.no_votes) / (mbc.yes_votes + mbc.no_votes)::decimal / 2 + 0.5 
+                        as proportion
+                    ) As l)
                 ) As properties
                 FROM orcnty24_4326 As lg
                 LEFT JOIN county c
@@ -83,7 +95,7 @@ def counties_json():
                 on c.id = mbc.county_id
                 LEFT JOIN measure m
                 on m.id = mbc.measure_id
-                WHERE m.date = %s and m.number = %s
+                WHERE substr(m.date::text, 0, 5) = %s and m.number = %s
             ) As f
             ) As fc;
         ''', (year, measure)
@@ -98,4 +110,4 @@ def counties_json():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=os.getenv('APP_DEBUG'))

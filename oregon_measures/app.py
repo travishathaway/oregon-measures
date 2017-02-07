@@ -4,11 +4,14 @@ import os
 
 from collections import defaultdict
 
-from flask import Flask, render_template, Response, jsonify, request, g, send_from_directory
+from flask import (
+    Flask, render_template, Response, jsonify, request, g,
+    send_from_directory
+)
 
-app = Flask(__name__)
 base_url = os.getenv('APP_BASE_URL', '/')
-static_url = os.getenv('APP_STATIC_URL', '/static/')
+static_url = os.getenv('APP_STATIC_URL', '/static')
+app = Flask(__name__, static_url_path=static_url)
 
 
 def get_db():

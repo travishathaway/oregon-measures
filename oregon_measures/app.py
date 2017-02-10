@@ -1,6 +1,7 @@
 import json
 import psycopg2
 import os
+from urllib import parse as urlparse
 
 from collections import defaultdict
 
@@ -8,6 +9,10 @@ from flask import (
     Flask, render_template, Response, jsonify, request, g,
     send_from_directory
 )
+
+# Database settings
+urlparse.uses_netloc.append("postgres")
+url = urlparse.urlparse(os.getenv("DATABASE_URL"))
 
 base_url = os.getenv('APP_BASE_URL', '/')
 static_url = os.getenv('APP_STATIC_URL', '/static')
@@ -18,11 +23,11 @@ def get_db():
     db = getattr(g, '_database', None)
     if db is None:
         db = g._database = psycopg2.connect(
-            host=os.getenv('APP_DB_HOST', '127.0.0.1'),
-            port=os.getenv('APP_DB_PORT', 5432),
-            user=os.getenv('APP_DB_USER'),
-            password=os.getenv('APP_DB_PASS'),
-            dbname=os.getenv('APP_DB_NAME')
+            database=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port
         ).cursor()
         return db
 

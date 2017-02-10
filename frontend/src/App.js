@@ -174,7 +174,6 @@ class App extends React.Component {
   }
 
   resetHighlight(e){
-    console.log(this.state.currentFeatureColor);
     var layer = e.target;
     layer.setStyle(style);
   }
@@ -280,9 +279,10 @@ class MeasureSelector extends React.Component {
   }
 
   componentWillReceiveProps(prevProps){
-    console.log(prevProps)
-    if(this.props.choices.length > 0 && this.props.year !== prevProps.year){
-      this.setState({value: this.props.choices[0].measure})
+    if(this.props.choices.length > 0 ){
+      if(this.state.value === undefined || this.props.year != prevProps.year){
+        this.setState({value: this.props.choices[0].measure})
+      }
     }
   }
 
@@ -321,7 +321,7 @@ class MeasureSelector extends React.Component {
           data-value={choices[x].measure}
           onClick={this.update.bind(this)}
         >
-          <b>Measure {choices[x].measure}</b><br/>
+          Measure {choices[x].measure}<br/>
           {choices[x].description}
         </a>
       ))

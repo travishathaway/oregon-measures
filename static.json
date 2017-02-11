@@ -1,5 +1,5 @@
 { 
-    "root": "frontend/build/",
+    "root": "client/build/",
     "proxies": {
         "/api/": {
             "origin": "http://localhost:5000"

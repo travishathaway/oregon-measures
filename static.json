@@ -1,6 +1,8 @@
 { 
     "root": "frontend/build/",
     "proxies": {
-        "/api/": "http://localhost:5000"
+        "/api/": {
+            "origin": "http://localhost:5000"
+        }
     }
 }

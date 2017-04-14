@@ -1,44 +1,36 @@
-"""
-Usage:
-    om_import <csv_directory>
-"""
-import glob
-import datetime
-import csv
 import os
-import docopt
 import sys
-import psycopg2
+import datetime
+import glob
+import csv
+
+from .settings import PG_CONN_INFO
+from .utils import psycopg2_cur
 
 election_dates_by_year = {
     2014: datetime.date(2014, 11, 4),
-    2016: datetime.date(2016, 11, 8)
+    2016: datetime.date(2016, 11, 8),
+    2007: datetime.date(2007, 11, 6)
 }
 
-connection = psycopg2.connect(
-    host=os.getenv('APP_DB_HOST', '127.0.0.1'),
-    port=os.getenv('APP_DB_PORT', 5432),
-    user=os.getenv('APP_DB_USER'),
-    password=os.getenv('APP_DB_PASS'),
-    dbname=os.getenv('APP_DB_NAME')
-)
-cursor = connection.cursor()
 
+def get_county_name_by_id(cursor):
+    """
+    Return county names by id
 
-try:
+    :param cursor:
+    :return:
+    """
     cursor.execute('SELECT id, name FROM county')
     rows = cursor.fetchall()
 
     county_id_by_name = {row[1]: row[0] for row in rows}
 
-except psycopg2.ProgrammingError:
-    cursor.close()
-    connection.close()
-    sys.stderr.write('Imprpoerly configured database')
-    sys.exit(1)
+    return county_id_by_name
 
 
-def process_directory(dirname):
+@psycopg2_cur(PG_CONN_INFO)
+def process_directory(cursor, dirname):
     """
     Provided a dirname, looks for all the CSV files
     at the first level of the directory and then imports
@@ -59,7 +51,7 @@ def process_directory(dirname):
             'Directory name not valid for import. '+
             'Make sure it is in the format <three_letter_month><year>\n'
         )
-        sys.exit(1) 
+        sys.exit(1)
 
     election_date = election_dates_by_year.get(year)
 
@@ -69,10 +61,9 @@ def process_directory(dirname):
         )
         sys.exit(1)
 
-    # Find all the csv files
     csv_files = glob.glob('{}/*.csv'.format(dirname))
+    county_id_by_name = get_county_name_by_id(cursor)
 
-    # Add the file data to database
     for csv_file in csv_files:
         measure_number = int(os.path.basename(csv_file)[1:].replace('.csv', ''))
 
@@ -109,24 +100,3 @@ def process_directory(dirname):
                         int(row[1].replace(',', '')),
                         int(row[2].replace(',', ''))
                     ))
-
-
-def main():
-    """
-    Runs the main CSV importer
-    """
-    try:
-        args = docopt.docopt(__doc__)
-
-        dirname = args.get('<csv_directory>')
-
-        if os.path.isdir(dirname):
-            process_directory(dirname)
-        else:
-            sys.stderr.write(
-                "Please provide a valid directory containing csvs\n")
-            sys.exit(1)
-    finally:
-        cursor.close()
-        connection.commit()
-        connection.close()

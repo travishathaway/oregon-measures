@@ -2,7 +2,7 @@ from setuptools import setup
 
 version = '0.1'
 
-description = "Web app and data importers for Oregon ballot measure data"
+description = "CLI tools for Oregon ballot measure data and web app"
 
 setup(
     name="oregon_measures",
@@ -16,12 +16,12 @@ setup(
     install_requires=[
         'setuptools', 
         'psycopg2', 
-        'docopt',
+        'click',
         'flask'
     ],
     entry_points="""
         [console_scripts]
-        om_import = oregon_measures.import_csv:main
+        om = oregon_measures.cli:cli
     """,
     classifiers=[
         'Environment :: Console',

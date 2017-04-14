@@ -3,6 +3,19 @@ import chroma from 'chroma-js'
 import { GeoJSON, LayerGroup} from 'react-leaflet'
 
 class Choropleth extends React.Component {
+  constructor(props){
+    super(props)
+    this.state = {features: props.data}
+  }
+
+  componentWillReceiveProps(nextProps){
+    if(nextProps.data){
+      if(nextProps.data !== this.props.data){
+        this.setState({features: nextProps.data})
+      }
+    }
+  }
+
   isFunction (prop) {
     return typeof prop === 'function'
   }
@@ -60,8 +73,9 @@ class Choropleth extends React.Component {
 
   render(){
     const { layerContainer, identity, ...options } = this.props //remove 
+    var features = [];
 
-    var features = this.props.data.map((feature, idx) =>
+    features = this.state.features.map((feature, idx) =>
       (<GeoJSON
         key={(identity) ? identity(feature) : idx}
         {...options}
@@ -79,23 +93,28 @@ class Choropleth extends React.Component {
   }
 }
 
-export default Choropleth
 
 class GeoJsonUpdatable extends GeoJSON {
-    componentWillReceiveProps(prevProps) {
-        if (prevProps.data !== this.props.data) {
-            this.leafletElement.clearLayers();
-        }
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.data !== this.props.data) {
+      console.log(nextProps);
+      this.leafletElement.clearLayers();
     }
+  }
 
-    componentDidUpdate(prevProps) {
-        if (prevProps.data !== this.props.data) {
-            this.leafletElement.addData(this.props.data);
-        }
+  componentDidUpdate(nextProps) {
+    if (nextProps.data !== this.props.data) {
+      this.leafletElement.addData(nextProps.data);
     }
+  }
 }
 
 GeoJsonUpdatable.propTypes = {
     data: React.PropTypes.object.isRequired
 }
 
+Choropleth.propTypes = {
+    data: React.PropTypes.array.isRequired
+}
+
+export default Choropleth

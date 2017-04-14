@@ -2,7 +2,10 @@ import React from 'react'
 import axios from 'axios'
 import { Map, TileLayer } from 'react-leaflet'
 import Choropleth from './Choropleth'
- 
+import MeasurePieChart from './Charts'
+import D3Map from './D3Map'
+import D3Map2 from './D3Map2'
+
 const style = {
     fillColor: '#F28F3B',
     weight: 2,
@@ -25,25 +28,32 @@ const colors =[
  '#33eb26'
 ]
 
-const mapbox_api_token = 'pk.eyJ1IjoidGhhdGgiLCJhIjoiY2lsMnc1OW9yM2pqcXV5a3NtMXh3b3I4ZCJ9.Mn1daTFDAN18C38dOS0SjQ'
-
-/**
- * This is the nice muted background
- */
-const tile_layer_url = "http://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token=" + mapbox_api_token
 
 class App extends React.Component {
   constructor(){
     super()
     this.state = {
-      geojson: [],
       year: '',
       year_choices: [],
       measure: '',
       measure_choices: [],
-      measures_by_year: [],
       measure_descriptions: {},
       description: '',
+
+      /**
+       * Holds the geo json to render
+       */
+      geojson: [],
+
+      /**
+       * Holds all measures organized from year.
+       */
+      measures_by_year: [],
+
+      /**
+       * Holds all the information about measure results by county
+       */
+      results: {},
 
       /**
        * Temp variable so we can reset the color of the feature as we 
@@ -57,37 +67,48 @@ class App extends React.Component {
       cached_layers: {}
     }
 
-    var that = this
+    var self = this;
 
     axios.get(
-      '/measure-by-year-all'
+      '/json/geo.json'
     ).then(function(resp){
-      that.setState({
-        measures_by_year: resp.data,
-        year_choices: Object.keys(resp.data),
-        year: Object.keys(resp.data)[0]
-      })
+      var f_resp = resp
 
-      var measure_choices = []
-      var measure_descriptions = []
+      axios.get(
+        '/json/measures.json'
+      ).then(function(resp){
+        var measures = resp.data.measures;
+        var results = resp.data.results;
 
-      that.setState({
-        measure_choices: that.setMeasureChoices(resp.data, that.state.year)
-      })
+        self.setState({
+          measures_by_year: measures,
+          year_choices: Object.keys(measures),
+          year: Object.keys(measures)[0],
+          results: results
+        })
 
-      that.setState({
-        measure: that.state.measure_choices[0].measure
+        self.setState({
+          measure_choices: self.setMeasureChoices(measures, self.state.year)
+        })
+
+        self.setState({
+          measure: self.state.measure_choices[0].measure
+        })
+
+        var geojson = self.updateGeoJson(f_resp.data.features)
+
+        self.setState({geojson})
+
       })
     })
-  }
-
-  componentDidMount(){
   }
 
   componentDidUpdate(prevProps, prevState){
     if( this.state.year && this.state.measure){
       if(this.state.year !== prevState.year || this.state.measure !== prevState.measure){
-        this.updateMap()
+        this.setState({
+          geojson: this.updateGeoJson(this.state.geojson)
+        })
       }
     }
   }
@@ -114,42 +135,33 @@ class App extends React.Component {
     return measure_choices
   }
 
-  updateMap(){
-    var that = this
-    var current_layer = this.state.year + '-' + this.state.measure
+  updateGeoJson(geojson){
+    var self = this;
 
-    if(this.state.cached_layers[current_layer] !== undefined){
-      this.setState({geojson: this.state.cached_layers[current_layer]})
-    } else {
-      axios.get(
-        '/counties.json',
-        {
-          params: {
-            measure: this.state.measure,
-            year: this.state.year
-          }
-        }
-      ).then(function(resp){
-        that.setState({geojson: resp.data[0].features})
-        that.setState(function(prevState){
-          prevState.cached_layers[that.state.year + '-' + that.state.measure] = resp.data[0].features
-          return prevState
-        })
-      })
-    }
+    geojson.map(function(obj){
+      var result_key = self.state.year + '-' + 
+          self.state.measure + '-' + 
+          obj.properties.county_id;
+
+      obj.properties.yes_votes = self.state.results[result_key]['yes_votes'];
+      obj.properties.no_votes = self.state.results[result_key]['no_votes'];
+      obj.properties.proportion = self.state.results[result_key]['proportion'];
+    })
+
+    return geojson
   }
 
   updateYear(value){
-    var year = value
     var measure_choices = this.setMeasureChoices(
       this.state.measures_by_year, value
     )
     var measure = measure_choices[0].measure
 
+    this.setState({measure})
+
     this.setState({
-        year,
-        measure_choices,
-        measure
+        year: value,
+        measure_choices:  measure_choices,
     })
   }
 
@@ -178,69 +190,55 @@ class App extends React.Component {
     layer.setStyle(style);
   }
 
+  getDataUrl(){
+    if(this.state.measure && this.state.year){
+      return '/counties.json?measure='+this.state.measure+'&year='+this.state.year 
+    } else {
+      return undefined
+    }
+  }
+
   render(){
-    var that = this
+    var self = this;
 
     return (
-      <div className="row">
-        <div className="col-md-9">
-          <Map center={this.props.position} zoom={7} id="map" doubleClickZoom={false}
-            zoomControl={false} touchZoom={false} scrollWheelZoom={false}>
-            <TileLayer url={tile_layer_url} id="mapbox.light" />
-            <Choropleth
+      <div>
+        <div className="row">
+          <div className="col-md-12">
+            <h1>Oregon Measures</h1>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-8">
+            <D3Map 
+              colors={colors} 
               data={this.state.geojson}
               valueProperty={(feature) => feature.properties.proportion}
-              colors={colors}
-              mode='q'
-              style={style}
-              onMouseOver={function(e){
-                var layer = e.layer;
-                that.setState({current_feature_fill_color: layer.options.fillColor});
-
-                layer.setStyle({
-                  weight: 5,
-                  color: '#666',
-                  dashArray: '',
-                  fillOpacity: 0.7
-                });
-
-                layer.bringToFront();
-              }}
-              onMouseOut={function(e){
-                var layer = e.layer;
-                var tmp_style = style;
-                tmp_style['fillColor'] = that.state.current_feature_fill_color;
-                layer.setStyle(style);
-              }}
-              onEachFeature={function(feature, layer){
-                layer.bindPopup(`
-                  <b>${feature.properties.name}</b><br>
-                  <b>Yes votes:</b> ${feature.properties.yes_votes}<br>
-                  <b>No votes:</b> ${feature.properties.no_votes}<br>
-                  <b>Proportion:</b> ${feature.properties.proportion}
-                `)
-              }}
-              identity={function(feature){
-                return that.state.year + '-' + that.state.measure + '-' + feature.properties.gid
-              }}
+              center={[-122, 45]}
+              height={475}
+              width={650}
+              scale={(600 * 700) / 100 }
             />
-          </Map>
+          </div>
+          <div className="col-md-4">
+              <MeasurePieChart data={this.state.geojson} />
+          </div>
         </div>
-        <div className="col-md-3">
-          <h2>Oregon Measures</h2>
-          <h4>Election Year</h4>
-          <Select 
-            choices={this.state.year_choices} 
-            value={this.state.year} 
-            change={this.updateYear.bind(this)} 
-          />
-          <hr />
-          <h4>Ballot Measures</h4>
-          <MeasureSelector 
-            choices={this.state.measure_choices} 
-            value={this.state.measure}
-            year={this.state.year}
-            change={this.updateMeasure.bind(this)}/>
+        <div className="row">
+          <div className="col-md-12">
+            <h4>Election Year</h4>
+            <Select 
+              choices={this.state.year_choices} 
+              value={this.state.year} 
+              change={this.updateYear.bind(this)} 
+            />
+            <hr />
+            <h4>Ballot Measures</h4>
+            <MeasureSelector 
+              choices={this.state.measure_choices} 
+              value={this.state.measure}
+              change={this.updateMeasure.bind(this)}/>
+          </div>
         </div>
       </div>
     )
@@ -248,9 +246,10 @@ class App extends React.Component {
 }
 
 class Select extends React.Component {
-  constructor(){
-    super()
-    this.state = {value: ''}
+  constructor(props){
+    super(props)
+    var value = props.value;
+    this.state = {value: value}
   }
 
   update(e){
@@ -274,14 +273,14 @@ class Select extends React.Component {
 
 class MeasureSelector extends React.Component {
   constructor(){
-    super()
-    this.state = {value: undefined}
+    super();
+    this.state = {value: undefined};
   }
 
-  componentWillReceiveProps(prevProps){
-    if(this.props.choices.length > 0 ){
-      if(this.state.value === undefined || this.props.year != prevProps.year){
-        this.setState({value: this.props.choices[0].measure})
+  componentWillReceiveProps(nextProps){
+    if(nextProps.choices.length > 0 ){
+      if(nextProps.value === undefined || nextProps.value !== this.props.value){
+        this.setState({value: nextProps.value})
       }
     }
   }
@@ -297,7 +296,7 @@ class MeasureSelector extends React.Component {
   getClasses(value){
     var className = 'list-group-item'
 
-    if(this.state.value == value){
+    if(Number(this.state.value) === Number(value)){
       className += ' active'
     }
 

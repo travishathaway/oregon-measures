@@ -1,0 +1,12 @@
+.map-layer path {
+    stroke: #fff;
+    stoke-width: 1.5px;
+}
+
+.tooltip {
+    border: solid 1px black;
+}
+
+svg.map {
+    background-color: #444;
+}

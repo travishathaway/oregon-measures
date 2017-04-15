@@ -1,22 +1,13 @@
 import React from 'react'
+//import PropTypes from 'prop-types';
 import axios from 'axios'
-import { Map, TileLayer } from 'react-leaflet'
-import Choropleth from './Choropleth'
-import MeasurePieChart from './Charts'
 import D3Map from './D3Map'
-import D3Map2 from './D3Map2'
 
-const style = {
-    fillColor: '#F28F3B',
-    weight: 2,
-    opacity: 1,
-    color: 'white',
-    dashArray: '3',
-    fillOpacity: 0.75
-}
-
+/**
+ * Colors we use to build our choropleth map
+ */
 const colors =[
- '#eb3326',
+ '#eb3326', // <-- Red
  '#f0624d',
  '#f58f76',
  '#fab8a0',
@@ -25,7 +16,7 @@ const colors =[
  '#b8faa0',
  '#8ff576',
  '#62f04d',
- '#33eb26'
+ '#33eb26' // <-- Green
 ]
 
 
@@ -171,41 +162,20 @@ class App extends React.Component {
     })
   }
 
-  highlightFeature(e){
-    var layer = e.target;
-    this.setState({currentFeatureColor: layer.options.fillColor});
-
-    layer.setStyle({
-      weight: 5,
-      color: '#666',
-      dashArray: '',
-      fillOpacity: 0.7
-    });
-
-    layer.bringToFront();
-  }
-
-  resetHighlight(e){
-    var layer = e.target;
-    layer.setStyle(style);
-  }
-
-  getDataUrl(){
-    if(this.state.measure && this.state.year){
-      return '/counties.json?measure='+this.state.measure+'&year='+this.state.year 
-    } else {
-      return undefined
-    }
-  }
-
+  /**
+   * Render of the main app. There are four components here:
+   *    - Map
+   *    - Summary statistics for measures
+   *    - Year selector
+   *    - Measure selector
+   */
   render(){
-    var self = this;
-
     return (
       <div>
         <div className="row">
           <div className="col-md-12">
             <h1>Oregon Measures</h1>
+            <hr />
           </div>
         </div>
         <div className="row">
@@ -216,28 +186,27 @@ class App extends React.Component {
               valueProperty={(feature) => feature.properties.proportion}
               center={[-122, 45]}
               height={475}
-              width={650}
+              width={625}
               scale={(600 * 700) / 100 }
             />
           </div>
-          <div className="col-md-4">
-              <MeasurePieChart data={this.state.geojson} />
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12">
-            <h4>Election Year</h4>
+          <div className="col-md-offset-1 col-md-3">
+            <div className="title">Election Year</div>
             <Select 
               choices={this.state.year_choices} 
               value={this.state.year} 
               change={this.updateYear.bind(this)} 
             />
             <hr />
-            <h4>Ballot Measures</h4>
+            <div className="title">Ballot Measures</div>
             <MeasureSelector 
               choices={this.state.measure_choices} 
               value={this.state.measure}
               change={this.updateMeasure.bind(this)}/>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-12">
           </div>
         </div>
       </div>
@@ -245,6 +214,11 @@ class App extends React.Component {
   }
 }
 
+
+/**
+ * Handles select for year specifically, but could be used as a
+ * general select widget for anything else.
+ */
 class Select extends React.Component {
   constructor(props){
     super(props)
@@ -271,6 +245,9 @@ class Select extends React.Component {
   }
 }
 
+/**
+ * Special widget for selecting a ballot measure
+ */
 class MeasureSelector extends React.Component {
   constructor(){
     super();
@@ -305,7 +282,7 @@ class MeasureSelector extends React.Component {
 
   render(){
     var containerSyle = {
-      height: '400px',
+      height: '330px',
       overflowY: 'scroll'
     }
 

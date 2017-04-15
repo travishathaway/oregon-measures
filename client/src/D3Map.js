@@ -108,16 +108,26 @@ class D3Map extends React.Component {
         .style('fill', self.getColor.bind(self))
         .style('line', 'white')
         .on('mouseover', function(d){
-          d3.select(this).style('fill', '#DDD');
+          var yes_text = 'Yes:';
+          var no_text = 'No:';
 
           var mouse = d3.mouse(svg.node()).map(function(d) {
             return parseInt(d);
           });
 
+          d3.select(this).style('fill', '#DDD');
+
+          if(d.properties.no_votes > d.properties.yes_votes){
+            no_text = '<b>No:</b>';
+          } else if( d.properties.yes_votes > d.properties.no_votes){
+            yes_text = '<b>Yes:</b>';
+          }
+
           tooltip.classed('hidden', false)
             .attr('style', 'left:' + (mouse[0] + 15) + 'px; top:' + (mouse[1] - 35) + 'px')
-            .html('<b>' + d.properties.name + '</b><br />Yes Votes: '+d.properties.yes_votes+
-                '<br />No Votes: '+d.properties.no_votes
+            .html('<div class="tooltip-title">' + d.properties.name + '</div>'+yes_text+' '+
+              d.properties.yes_votes.toLocaleString()+'<br />'+no_text+' '+
+              d.properties.no_votes.toLocaleString()
             );
         })
         .on('mouseout', function(d){
@@ -132,8 +142,6 @@ class D3Map extends React.Component {
       <div id="map-container">
         <svg className="map"/>
         <div className="tooltip hidden"></div>
-        <ChoroplethMapKey colors={this.props.colors}/>
-        <SummaryStatistics data={this.props.data} colors={this.props.colors}/>
       </div>
     )
   }
@@ -148,10 +156,11 @@ class ChoroplethMapKey extends React.Component {
 
     var color_divs = this.props.colors.map(function(obj, idx){
       var text = '';
+      var width_per = (1 / self.props.colors.length) * 100;
       var style = {
         'backgroundColor': obj,
         'height': '15px',
-        'width': '15px'
+        'width': width_per + '%'
       }
 
       if(idx === 0){
@@ -159,16 +168,13 @@ class ChoroplethMapKey extends React.Component {
       } else if(idx === self.props.colors.length - 1){
         text = 'Yes';
       }
+
       return (
         <div style={style} className="pull-left" key={idx}/>
       )
     });
     return (
       <div className="legend">
-
-        <div className="title">
-          Legend
-        </div>
         <div className="row">
           <div className="col-md-12">
             {color_divs.reverse()}
@@ -261,4 +267,8 @@ class SummaryStatistics extends React.Component {
   }
 }
 
-export default D3Map
+export {
+  D3Map, 
+  ChoroplethMapKey, 
+  SummaryStatistics
+}

@@ -1,7 +1,7 @@
 import React from 'react'
 //import PropTypes from 'prop-types';
 import axios from 'axios'
-import D3Map from './D3Map'
+import {D3Map, ChoroplethMapKey, SummaryStatistics} from './D3Map'
 
 /**
  * Colors we use to build our choropleth map
@@ -174,12 +174,16 @@ class App extends React.Component {
       <div>
         <div className="row">
           <div className="col-md-12">
-            <h1>Oregon Measures</h1>
+            <h1>Oregon Ballot Measures</h1>
+            <p>
+              An application for exploring ballot measures in Oregon. All 
+              ballot measures since 1996 are available except years 2002 and 2007.
+            </p>
             <hr />
           </div>
         </div>
         <div className="row">
-          <div className="col-md-8">
+          <div className="col-md-7">
             <D3Map 
               colors={colors} 
               data={this.state.geojson}
@@ -189,14 +193,26 @@ class App extends React.Component {
               width={625}
               scale={(600 * 700) / 100 }
             />
+            <div className="row">
+              <div className="col-md-offset-3 col-md-6">
+                <ChoroplethMapKey colors={colors}/>
+              </div>
+            </div>
           </div>
-          <div className="col-md-offset-1 col-md-3">
-            <div className="title">Election Year</div>
-            <Select 
-              choices={this.state.year_choices} 
-              value={this.state.year} 
-              change={this.updateYear.bind(this)} 
-            />
+          <div className="col-md-5">
+            <div className="row">
+              <div className="col-md-6">
+                <SummaryStatistics data={this.state.geojson} colors={colors}/>
+              </div>
+              <div className="col-md-6">
+                <div className="title">Election Year</div>
+                <Select 
+                  choices={this.state.year_choices} 
+                  value={this.state.year} 
+                  change={this.updateYear.bind(this)} 
+                />
+              </div>
+            </div>
             <hr />
             <div className="title">Ballot Measures</div>
             <MeasureSelector 

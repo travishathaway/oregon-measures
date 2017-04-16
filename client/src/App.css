@@ -1,0 +1,26 @@
+.measure-number {
+  font-size: 3em;
+  font-family: 'Merriweather', serif;
+}
+
+.measure-list {
+  height: 270px;
+  overflow-y: scroll;
+}
+
+.measure-list-item {
+  cursor: pointer;
+  padding: 15px 10px;
+  margin-top: 0px;
+}
+
+.measure-list-item.active {
+  background-color: #EEE;
+}
+
+.measure-list-item.active .measure-number {
+  color: #337ab7;
+  font-weight: bold;
+  font-size: 3em;
+  font-family: 'Merriweather', serif;
+}

@@ -110,6 +110,13 @@ class D3Map extends React.Component {
         .on('mouseover', function(d){
           var yes_text = 'Yes:';
           var no_text = 'No:';
+          var total_votes = d.properties.yes_votes + d.properties.no_votes;
+          var yes_percent = Math.round(
+            d.properties.yes_votes / total_votes * 10000, 2
+          ) / 100;
+          var no_percent = Math.round(
+            d.properties.no_votes / total_votes * 10000, 2
+          ) / 100;
 
           var mouse = d3.mouse(svg.node()).map(function(d) {
             return parseInt(d);
@@ -125,9 +132,21 @@ class D3Map extends React.Component {
 
           tooltip.classed('hidden', false)
             .attr('style', 'left:' + (mouse[0] + 15) + 'px; top:' + (mouse[1] - 35) + 'px')
-            .html('<div class="tooltip-title">' + d.properties.name + '</div>'+yes_text+' '+
-              d.properties.yes_votes.toLocaleString()+'<br />'+no_text+' '+
-              d.properties.no_votes.toLocaleString()
+            .html('<div class="tooltip-title">'+ 
+              d.properties.name+ 
+            '</div>'+
+            '<table class="">'+
+              '<tr>'+
+                '<td class="desc">'+yes_text+'</td>'+
+                '<td class="total">'+d.properties.yes_votes.toLocaleString()+'</td>'+
+                '<td class="percent">'+yes_percent+'%</td>'+
+              '</tr>'+
+              '<tr>'+
+                '<td class="desc">'+no_text+'</td>'+
+                '<td class="total">'+d.properties.no_votes.toLocaleString()+'</td>'+
+                '<td class="percent">'+no_percent+'%</td>'+
+              '</tr>'+
+            '</table>'
             );
         })
         .on('mouseout', function(d){
@@ -210,7 +229,7 @@ class SummaryStatistics extends React.Component {
   }
 
   render(){
-    var passed, yes_check, no_check;
+    var passed, yes_check, no_check, yes_sp, no_sp;
 
     var yes_votes = this.calculateSummaryStats('yes_votes');
     var no_votes = this.calculateSummaryStats('no_votes');
@@ -235,11 +254,13 @@ class SummaryStatistics extends React.Component {
     if(yes_votes > no_votes){
       passed = 'Yes';
       yes_check = <span className="glyphicon glyphicon-ok" />;
+      yes_sp = ' ';
     } else if(no_votes === yes_votes){
       passed = 'Tied'
     } else {
       passed = 'No'
       no_check = <span className="glyphicon glyphicon-ok" />;
+      no_sp = ' ';
     }
 
     return (
@@ -248,14 +269,14 @@ class SummaryStatistics extends React.Component {
           Summary
         </div>
         <div>
-          {yes_check}
+          {yes_check}{yes_sp}
           <span style={(passed === 'Yes') ? bold_text : {}}>Yes</span> {yes_votes.toLocaleString()}
           <div className="result-bar">
             <div className="result-color" style={yes_bar}>
             </div>
           </div>
 
-          {no_check}&nbsp;
+          {no_check}{no_sp}
           <span style={(passed === 'No') ? bold_text : {}}>No</span> {no_votes.toLocaleString()}
           <div className="result-bar">
             <div className="result-color" style={no_bar}>

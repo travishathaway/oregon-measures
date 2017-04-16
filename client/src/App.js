@@ -1,24 +1,25 @@
 import React from 'react'
-//import PropTypes from 'prop-types';
 import axios from 'axios'
 import {D3Map, ChoroplethMapKey, SummaryStatistics} from './D3Map'
+import styles from './App.css'
 
 /**
  * Colors we use to build our choropleth map
  */
-const colors =[
- '#eb3326', // <-- Red
- '#f0624d',
- '#f58f76',
- '#fab8a0',
- '#ffddcc',
- '#ddffcc',
- '#b8faa0',
- '#8ff576',
- '#62f04d',
- '#33eb26' // <-- Green
+const colors = [
+  '#993636', // <-- Red
+  '#C74646',
+  '#F25555',
+  '#69E550',
+  '#58BF43',
+  '#357328' // <-- Green
 ]
 
+/**
+ * Short description of this application
+ */
+const app_desc = 'An application for exploring ballot measures in Oregon. All'+
+                 ' ballot measures since 1996 are available except years 2002 and 2007.'
 
 class App extends React.Component {
   constructor(){
@@ -94,6 +95,10 @@ class App extends React.Component {
     })
   }
 
+  /**
+   * This is where we determine whether or not we need to update
+   * our geojson object
+   */
   componentDidUpdate(prevProps, prevState){
     if( this.state.year && this.state.measure){
       if(this.state.year !== prevState.year || this.state.measure !== prevState.measure){
@@ -111,6 +116,8 @@ class App extends React.Component {
    *
    * @param measures Object
    * @param year String
+   *
+   * @return measure_choices Array
    */
   setMeasureChoices(measures, year){
     var measure_choices = measures[year].map(function(x){
@@ -126,6 +133,14 @@ class App extends React.Component {
     return measure_choices
   }
 
+  /**
+   * This method updates the provided geojson object with new values
+   * depending on the current state values for year and measure.
+   *
+   * @param geojson Object
+   *
+   * @return geojson Object
+   */
   updateGeoJson(geojson){
     var self = this;
 
@@ -142,6 +157,13 @@ class App extends React.Component {
     return geojson
   }
 
+  /**
+   * This function updates the state property year. When you change the year,
+   * we have a whole new set of values for measure, so we also account for 
+   * that here.
+   *
+   * @param value String|Number
+   */
   updateYear(value){
     var measure_choices = this.setMeasureChoices(
       this.state.measures_by_year, value
@@ -156,6 +178,11 @@ class App extends React.Component {
     })
   }
 
+  /**
+   * This function updates the state value for measure
+   *
+   * @param String|Number
+   */
   updateMeasure(value){
     this.setState({
       measure: value
@@ -163,11 +190,7 @@ class App extends React.Component {
   }
 
   /**
-   * Render of the main app. There are four components here:
-   *    - Map
-   *    - Summary statistics for measures
-   *    - Year selector
-   *    - Measure selector
+   * Rendering of the main app.
    */
   render(){
     return (
@@ -176,8 +199,7 @@ class App extends React.Component {
           <div className="col-md-12">
             <h1>Oregon Ballot Measures</h1>
             <p>
-              An application for exploring ballot measures in Oregon. All 
-              ballot measures since 1996 are available except years 2002 and 2007.
+              {app_desc}
             </p>
             <hr />
           </div>
@@ -287,7 +309,7 @@ class MeasureSelector extends React.Component {
    * Returns the appropriate classes to use for our <a> elements
    */
   getClasses(value){
-    var className = 'list-group-item'
+    var className = 'measure-list-item'
 
     if(Number(this.state.value) === Number(value)){
       className += ' active'
@@ -297,30 +319,32 @@ class MeasureSelector extends React.Component {
   }
 
   render(){
-    var containerSyle = {
-      height: '330px',
-      overflowY: 'scroll'
-    }
-
     var options = [];
     var choices = this.props.choices;
 
     for(var x = 0; x < choices.length; x++){
       options.push((
-        <a href="#" 
-          className={this.getClasses(choices[x].measure)} 
+        <div className={"media " + this.getClasses(choices[x].measure)}
           key={choices[x].measure} 
-          data-value={choices[x].measure}
-          onClick={this.update.bind(this)}
         >
-          Measure {choices[x].measure}<br/>
-          {choices[x].description}
-        </a>
+          <div className="measure-number media-left media-middle"
+            onClick={this.update.bind(this)}
+            data-value={choices[x].measure}
+          >
+            {choices[x].measure}
+          </div>
+          <div className="media-body"
+            onClick={this.update.bind(this)}
+            data-value={choices[x].measure}
+          >
+            {choices[x].description}
+          </div>
+        </div>
       ))
     }
 
     return (
-      <div className="list-group" style={containerSyle}>
+      <div className="measure-list">
         {options}
       </div>
     )

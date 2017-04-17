@@ -58,5 +58,3 @@ env.sh
 *.swo
 
 .idea
-
-client/public/json

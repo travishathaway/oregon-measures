@@ -1,18 +1,20 @@
 import React from 'react'
+import {BrowserRouter as Router, Link, Route} from 'react-router-dom'
 import axios from 'axios'
 import {D3Map, ChoroplethMapKey, SummaryStatistics} from './D3Map'
-import styles from './App.css'
+import './App.css'
 
 /**
  * Colors we use to build our choropleth map
  */
+
 const colors = [
-  '#993636', // <-- Red
-  '#C74646',
-  '#F25555',
-  '#69E550',
-  '#58BF43',
-  '#357328' // <-- Green
+  '#b02029', // <-- Red
+  '#cf635d',
+  '#e99d98',
+  '#bdd9a2',
+  '#91b66e',
+  '#66953d' // <-- Green
 ]
 
 /**
@@ -32,6 +34,10 @@ class App extends React.Component {
       measure_descriptions: {},
       description: '',
 
+      center_col_cls: 'col-md-7',
+      left_col_cls: 'col-md-3',
+      right_col_cls: 'col-md-2',
+
       /**
        * Holds the geo json to render
        */
@@ -40,7 +46,7 @@ class App extends React.Component {
       /**
        * Holds all measures organized from year.
        */
-      measures_by_year: [],
+      measures_by_year: {},
 
       /**
        * Holds all the information about measure results by county
@@ -138,6 +144,8 @@ class App extends React.Component {
    * depending on the current state values for year and measure.
    *
    * @param geojson Object
+   * @param year String
+   * @param measure String
    *
    * @return geojson Object
    */
@@ -155,6 +163,33 @@ class App extends React.Component {
     })
 
     return geojson
+  }
+
+  /**
+   * This method will return the appropriate GeoJSON object given a year
+   * and measure
+   *
+   * @param year String
+   * @param measure String
+   *
+   * @return geojson Object
+   */
+  getGeoJson(year, measure){
+    console.log(year, measure)
+
+    var geojson = this.state.geojson;
+    var results = this.state.results;
+
+    geojson.map(function(obj){
+      var result_key = year + '-' + measure + '-' + obj.properties.county_id;
+      var county_results = results[result_key];
+
+      obj.properties.yes_votes = results[result_key]['yes_votes'];
+      obj.properties.no_votes = results[result_key]['no_votes'];
+      obj.properties.proportion = results[result_key]['proportion'];
+    });
+
+    return geojson;
   }
 
   /**
@@ -190,61 +225,253 @@ class App extends React.Component {
   }
 
   /**
+   * Returns the measure description given a year and measure
+   *
+   * @param year String
+   * @param measure String
+   */
+  getMeasureDescription(year, measure){
+    var measures = this.state.measures_by_year[year]
+
+    if(measures !== undefined){
+      for(var x = 0; x < measures.length; x++){
+        if(measures[x]['measure'] == measure){
+          return measures[x]['description']
+        }
+      }
+    }
+  }
+
+  /**
    * Rendering of the main app.
    */
   render(){
+    var self = this;
+
+    return (
+      <Router>
+        <div>
+          <div className="row">
+            <div className="col-md-12">
+              <h1><Link to="/">Oregon Ballot Measures</Link></h1>
+              <p>
+                {app_desc}
+              </p>
+              <hr />
+            </div>
+          </div>
+
+          <Route exact={true} path="/" render={() => (
+            <div>
+              <h2>Measure List</h2>
+              <MeasureList measures={self.state.measures_by_year} />
+            </div>
+          )} />
+
+          <Route path="/:year/:measure" render={({ match }) => (
+            <div className="row map-container">
+              <div className="search">
+                <span className="search-text">
+                  <Link to="/">Back to search</Link>
+                </span>
+              </div>
+              <div className="col-md-4">
+                <div className="map-title">
+                  Measure {match.params.measure} &mdash; {match.params.year}
+                </div>
+                <hr />
+                <SummaryStatistics data={self.getGeoJson(match.params.year, match.params.measure)} 
+                  colors={colors}/>
+                <hr />
+                <div className="title">
+                  Description
+                </div>
+                <p>
+                  {this.getMeasureDescription(match.params.year, match.params.measure)}
+                </p>
+                <hr />
+
+                <div className="title">
+                  Legend
+                </div>
+                <div className="row">
+                  <div className="col-md-6">
+                    <ChoroplethMapKey 
+                      colors={colors.slice(0, Math.round(colors.length / 2))}
+                      title="No Votes"
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <ChoroplethMapKey 
+                      colors={colors.slice(Math.round(colors.length / 2), colors.length).reverse()}
+                      title="Yes Votes"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="col-md-7">
+                <D3Map 
+                  colors={colors} 
+                  data={self.getGeoJson(match.params.year, match.params.measure)}
+                  valueProperty={(feature) => feature.properties.proportion}
+                  center={[-122, 45]}
+                  height={475}
+                  width={625}
+                  scale={(600 * 700) / 100 }
+                />
+
+                <div className="row">
+                  <div className="col-md-offset-3 col-md-3">
+                  </div>
+                  <div className="col-md-3">
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          )} />
+        </div>
+      </Router>
+    )
+  }
+}
+
+
+/**
+ * View details and map for a single ballot measure
+ */
+class MeasureView extends React.Component {
+  render(){
+    return (
+     <div className="row">
+       <div className="col-md-7">
+         <D3Map 
+           colors={colors} 
+           data={this.state.geojson}
+           valueProperty={(feature) => feature.properties.proportion}
+           center={[-122, 45]}
+           height={475}
+           width={625}
+           scale={(600 * 700) / 100 }
+         />
+         <div className="row">
+           <div className="col-md-offset-3 col-md-6">
+             <ChoroplethMapKey colors={colors}/>
+           </div>
+         </div>
+       </div>
+       <div className="col-md-5">
+         <div className="row">
+           <div className="col-md-6">
+             <SummaryStatistics data={this.state.geojson} colors={colors}/>
+           </div>
+           <div className="col-md-6">
+             <div className="title">Election Year</div>
+             <Select 
+               choices={this.state.year_choices} 
+               value={this.state.year} 
+               change={this.updateYear.bind(this)} 
+             />
+           </div>
+         </div>
+         <hr />
+         <div className="title">Ballot Measures</div>
+         <MeasureSelector 
+           choices={this.state.measure_choices} 
+           value={this.state.measure}
+           change={this.updateMeasure.bind(this)}/>
+        </div>
+      </div>
+    )
+  }
+}
+
+
+class MeasureList extends React.Component {
+  constructor(){
+    super()
+    this.state = {
+      search_text: '',
+      style: {
+        'display': 'block'
+      },
+      show_style: {
+        'display': 'none'
+      }
+    }
+  }
+  hide(){
+    this.props.updateColWidth('no_search')
+    this.setState({
+      style: {'display': 'none'},
+      show_style: {'display': 'block'}
+    })
+  }
+
+  show(){
+    this.props.updateColWidth('search')
+    this.setState({
+      style: {'display': 'block'},
+      show_style: {'display': 'none'}
+    })
+  }
+
+  updateSearch(e){
+    this.setState({
+      search_text: e.value
+    })
+
+    this.state.measure
+  }
+
+  render(){
+    var years = Object.keys(this.props.measures)
+    var measures_by_year = this.props.measures
+
+    var grouped_item_list = years.map(function(year){
+      var measures = measures_by_year[year]
+      var measure_list = measures.map(function(meas){
+        return (
+          <div key={year + ' ' + meas.measure}>
+            <div className="measure-list-item">
+              <div>
+                <Link to={`/${year}/${meas.measure}`}>
+                  Measure {meas.measure}
+                </Link>
+              </div>
+              {meas.description}
+            </div>
+          </div>
+        )
+      })
+
+      return (
+        <div key={year}>
+          <div className="measure-list-item-year">{year}</div>
+          <div>{measure_list}</div>
+        </div>
+      )
+    })
+
     return (
       <div>
-        <div className="row">
-          <div className="col-md-12">
-            <h1>Oregon Ballot Measures</h1>
-            <p>
-              {app_desc}
-            </p>
-            <hr />
-          </div>
+        <div style={this.state.show_stlye}>
+          <a href="#" onClick={this.show.bind(this)}>Show</a>
         </div>
-        <div className="row">
-          <div className="col-md-7">
-            <D3Map 
-              colors={colors} 
-              data={this.state.geojson}
-              valueProperty={(feature) => feature.properties.proportion}
-              center={[-122, 45]}
-              height={475}
-              width={625}
-              scale={(600 * 700) / 100 }
+        <div className="measure-list-container" style={this.state.style}>
+          <div>
+            <div className="pull-right">
+              <a href="#" onClick={this.hide.bind(this)} >Hide</a>
+            </div>
+            <input type="text" value={this.state.search_text} 
+              onChange={this.updateSearch}
+              className="form-control" placeholder="Search..."
             />
-            <div className="row">
-              <div className="col-md-offset-3 col-md-6">
-                <ChoroplethMapKey colors={colors}/>
-              </div>
-            </div>
+            <br/>
           </div>
-          <div className="col-md-5">
-            <div className="row">
-              <div className="col-md-6">
-                <SummaryStatistics data={this.state.geojson} colors={colors}/>
-              </div>
-              <div className="col-md-6">
-                <div className="title">Election Year</div>
-                <Select 
-                  choices={this.state.year_choices} 
-                  value={this.state.year} 
-                  change={this.updateYear.bind(this)} 
-                />
-              </div>
-            </div>
-            <hr />
-            <div className="title">Ballot Measures</div>
-            <MeasureSelector 
-              choices={this.state.measure_choices} 
-              value={this.state.measure}
-              change={this.updateMeasure.bind(this)}/>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12">
+          <div className="measure-list">
+            {grouped_item_list}
           </div>
         </div>
       </div>
@@ -252,6 +479,26 @@ class App extends React.Component {
   }
 }
 
+
+class MeasureSearch extends React.Component {
+  render(){
+    return (
+      <div className="row">
+        <div className="col-md-12">
+           <Select 
+             choices={this.props.year_choices} 
+             value={this.props.year} 
+             change={this.props.updateYear} 
+           />
+           <MeasureSelector 
+             choices={this.props.measure_choices} 
+             value={this.props.measure}
+             change={this.props.updateMeasure}/>
+        </div> 
+      </div>
+    )
+  }
+}
 
 /**
  * Handles select for year specifically, but could be used as a

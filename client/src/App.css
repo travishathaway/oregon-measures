@@ -1,19 +1,50 @@
+.map-title {
+  font-size: 1.75em;
+  font-family: 'Merriweather', serif;
+}
+
+.map-container {
+  position: relative;
+}
+
+.map-container .search {
+  position: absolute;
+  top: 0px;
+  right: 15px;
+  z-index: 9998;
+  font-family: 'Merriweather', serif;
+}
+
+.map-container .search .glyphicon.glyphicon-search, 
+.map-container .search .search-text {
+  font-size: 1.5em;
+}
+
 .measure-number {
   font-size: 3em;
   font-family: 'Merriweather', serif;
 }
 
 .measure-list {
-  height: 270px;
+  height: 500px;
   overflow-y: scroll;
 }
 
 .measure-list-item {
-  cursor: pointer;
-  padding: 15px 10px;
+  padding: 5px 10px;
   margin-top: 0px;
+  border-bottom: 1px solid #BBB;
 }
 
+.measure-list-item a {
+  font-size: 1.25em;
+}
+
+.measure-list-item-year {
+  font-size: 2em;
+  font-family: 'Merriweather', serif;
+  border-bottom: 1px solid #BBB;
+}
 .measure-list-item.active {
   background-color: #EEE;
 }

@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import chroma from 'chroma-js';
 import React from 'react';
-import styles from './D3Map.css';
+import './D3Map.css';
 
 
 class D3Map extends React.Component {
@@ -54,16 +54,29 @@ class D3Map extends React.Component {
 
   /**
    * This is were we determine whether or not we need to draw the 
-   * map again. We rely on the "dataUrl" parameter provided as a 
-   * property to uniquely identify 
+   * map again.
+   *
+   * @param prevProps Object
+   */
+  componentDidMount(prevProps){
+    if(this.props.data !== undefined){
+      if(this.props.data.length > 0){
+        this.drawMap()
+      }
+    }
+  }
+
+  /**
+   * This is were we determine whether or not we need to draw the 
+   * map again.
    *
    * @param prevProps Object
    */
   componentDidUpdate(prevProps){
     if(this.props.data !== undefined){
-        if(this.props.data.length > 0){
-          this.drawMap()
-        }
+      if(this.props.data.length > 0){
+        this.drawMap()
+      }
     }
   }
 
@@ -77,13 +90,10 @@ class D3Map extends React.Component {
     var width = this.props.width,
         height = this.props.height;
 
-    // TODO: generalize this to all for other centering options
     var projection = d3.geoMercator()
       .scale(this.props.scale)
-      // Center the Map in Oregon
       .center(this.props.center)
-      .translate([width/3, height/3])
-      //.translate([width / 2, height / 2]);
+      .translate([width / 3, height / 3])
 
     var path = d3.geoPath()
       .projection(projection);
@@ -107,7 +117,7 @@ class D3Map extends React.Component {
         .attr('vector-effect', 'non-scaling-stroke')
         .style('fill', self.getColor.bind(self))
         .style('line', 'white')
-        .on('mouseover', function(d){
+        .on('mousemove', function(d){
           var yes_text = 'Yes:';
           var no_text = 'No:';
           var total_votes = d.properties.yes_votes + d.properties.no_votes;
@@ -131,7 +141,7 @@ class D3Map extends React.Component {
           }
 
           tooltip.classed('hidden', false)
-            .attr('style', 'left:' + (mouse[0] + 15) + 'px; top:' + (mouse[1] - 35) + 'px')
+            .attr('style', 'left:' + (mouse[0] + 30) + 'px; top:' + (mouse[1] - 70) + 'px')
             .html('<div class="tooltip-title">'+ 
               d.properties.name+ 
             '</div>'+
@@ -171,47 +181,53 @@ class D3Map extends React.Component {
  */
 class ChoroplethMapKey extends React.Component {
   render(){
-    var self = this;
+    var breaks = [];
 
-    var color_divs = this.props.colors.map(function(obj, idx){
-      var text = '';
-      var width_per = (1 / self.props.colors.length) * 100;
-      var style = {
-        'backgroundColor': obj,
-        'height': '15px',
-        'width': width_per + '%'
-      }
+    for(var x = 1; x <= this.props.colors.length; x++){
+      var step = Math.round((1 / this.props.colors.length) / 2 * 100);
 
-      if(idx === 0){
-        text = 'No';
-      } else if(idx === self.props.colors.length - 1){
-        text = 'Yes';
+      breaks.push(Math.round((x/this.props.colors.length) / 2 * 100 + 50 ) - step)
+    }
+
+    var break_divs = breaks.map(function(num, idx){
+      var percent_sign;
+
+      if(idx + 1 === breaks.length){
+        percent_sign = '%'
       }
 
       return (
-        <div style={style} className="pull-left" key={idx}/>
+        <div key={idx} className="legend-number">{num}{percent_sign}</div>
+      )
+    })
+
+    var color_divs = this.props.colors.map(function(obj, idx){
+      var style = {
+        'backgroundColor': obj,
+      }
+
+      return (
+        <div style={style} className="legend-color" key={idx}/>
       )
     });
+
     return (
       <div className="legend">
+        <div className="row legend-title">
+          <div className="col-md-12">
+            {this.props.title}
+          </div>
+        </div>
         <div className="row">
           <div className="col-md-12">
             {color_divs.reverse()}
           </div>
         </div>
-
         <div className="row">
           <div className="col-md-12">
-            <div className="pull-left">
-              <b>Yes</b>
-            </div>
-
-            <div className="pull-right">
-              <b>No</b>
-            </div>
+            {break_divs}
           </div>
         </div>
-
       </div>
     )
   }
@@ -266,7 +282,7 @@ class SummaryStatistics extends React.Component {
     return (
       <div className="summary-statistics">
         <div className="title">
-          Summary
+          Results
         </div>
         <div>
           {yes_check}{yes_sp}

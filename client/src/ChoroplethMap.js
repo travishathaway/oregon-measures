@@ -1,10 +1,10 @@
 import * as d3 from "d3";
 import chroma from 'chroma-js';
 import React from 'react';
-import './D3Map.css';
+import './ChoroplethMap.css';
 
 
-class D3Map extends React.Component {
+class ChoroplethMap extends React.Component {
   /**
    * Convience funciton
    */
@@ -305,7 +305,7 @@ class SummaryStatistics extends React.Component {
 }
 
 export {
-  D3Map, 
+  ChoroplethMap, 
   ChoroplethMapKey, 
   SummaryStatistics
 }

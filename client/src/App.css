@@ -24,34 +24,3 @@
   font-size: 3em;
   font-family: 'Merriweather', serif;
 }
-
-.measure-list {
-  height: 500px;
-  overflow-y: scroll;
-}
-
-.measure-list-item {
-  padding: 5px 10px;
-  margin-top: 0px;
-  border-bottom: 1px solid #BBB;
-}
-
-.measure-list-item a {
-  font-size: 1.25em;
-}
-
-.measure-list-item-year {
-  font-size: 2em;
-  font-family: 'Merriweather', serif;
-  border-bottom: 1px solid #BBB;
-}
-.measure-list-item.active {
-  background-color: #EEE;
-}
-
-.measure-list-item.active .measure-number {
-  color: #337ab7;
-  font-weight: bold;
-  font-size: 3em;
-  font-family: 'Merriweather', serif;
-}

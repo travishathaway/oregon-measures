@@ -34,6 +34,7 @@ class App extends React.Component {
       measure_choices: [],
       measure_descriptions: {},
       description: '',
+      measure_search_text: '',
 
       center_col_cls: 'col-md-7',
       left_col_cls: 'col-md-3',
@@ -226,6 +227,18 @@ class App extends React.Component {
   }
 
   /**
+   * Updates the measure search text so the top level can remember
+   * what was search for when being directed to a different page
+   *
+   * @param measure_search_text string
+   */
+  updateMeasureSearchText(measure_search_text){
+    this.setState({
+      measure_search_text
+    })
+  }
+
+  /**
    * Returns the measure description given a year and measure
    *
    * @param year String
@@ -264,8 +277,9 @@ class App extends React.Component {
 
           <Route exact={true} path="/" render={() => (
             <div>
-              <h2>Measure List</h2>
-              <MeasureList measures={self.state.measures_by_year} />
+              <MeasureList measures={self.state.measures_by_year} 
+                search_text={this.state.measure_search_text}
+                updateSearchText={this.updateMeasureSearchText.bind(this)}/>
             </div>
           )} />
 

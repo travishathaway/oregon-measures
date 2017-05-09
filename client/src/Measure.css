@@ -24,3 +24,15 @@
   font-family: 'Merriweather', serif;
 }
 
+.cat-tag {
+  display: inline-block;
+  cursor: pointer;
+  padding: 3px 7px;
+  margin: 3px;
+  border: solid 1px #DDD;
+  border-radius: 5px 5px;
+}
+
+.cat-tag:hover {
+  background-color: #DDD;
+}

@@ -1,6 +1,6 @@
 import React from 'react'
 import {Link} from 'react-router-dom'
-import './MeasureList.css'
+import './Measure.css'
 
 
 /*
@@ -23,21 +23,6 @@ class MeasureList extends React.Component {
     }
 
     this.updateSearch = this.updateSearch.bind(this);
-  }
-  hide(){
-    this.props.updateColWidth('no_search')
-    this.setState({
-      style: {'display': 'none'},
-      show_style: {'display': 'block'}
-    })
-  }
-
-  show(){
-    this.props.updateColWidth('search')
-    this.setState({
-      style: {'display': 'block'},
-      show_style: {'display': 'none'}
-    })
   }
 
   /**
@@ -104,40 +89,66 @@ class MeasureList extends React.Component {
     })
   }
 
+  /** 
+   * Determines whether or not to include year in the current
+   * list of measures to render.
+   *
+   * @param year number
+   */
+  isYearIncluded(year){
+    var cur_years = this.props.categorical_filters['years']
+
+    if(cur_years.indexOf(year) > -1){
+      return true
+    }
+
+    if(cur_years.length === 0){
+      return true
+    }
+
+    return false
+  }
+
   render(){
+    var self = this
     var years = Object.keys(this.state.visible_measures)
     var measures_by_year = this.state.visible_measures
 
     var grouped_item_list = years.map(function(year){
-      var measures = measures_by_year[year]
-      var measure_list = measures.map(function(meas){
-        return (
-          <div key={year + ' ' + meas.measure}>
-            <div className="measure-list-item">
-              <div>
-                <Link to={`/${year}/${meas.measure}`}>
-                  Measure {meas.measure}
-                </Link>
+      var include_year = self.isYearIncluded(year)
+
+      if( include_year ){
+        var measures = measures_by_year[year]
+        var measure_list = measures.map(function(meas){
+          return (
+            <div key={year + ' ' + meas.measure}>
+              <div className="measure-list-item">
+                <div>
+                  <Link to={`/${year}/${meas.measure}`}>
+                    Measure {meas.measure}
+                  </Link>
+                </div>
+                {meas.description}
               </div>
-              {meas.description}
             </div>
+          )
+        })
+
+        return (
+          <div key={year}>
+            <div className="measure-list-item-year">{year}</div>
+            <div>{measure_list}</div>
           </div>
         )
-      })
-
-      return (
-        <div key={year}>
-          <div className="measure-list-item-year">{year}</div>
-          <div>{measure_list}</div>
-        </div>
-      )
+      }
     })
 
     return (
       <div>
         <div className="measure-list-container" style={this.state.style}>
           <div className="row">
-            <div className="col-md-5 col-sm-12">
+            <div className="col-md-8 col-sm-12">
+              <br />
               <input type="text" value={this.state.search_text} 
                 onChange={this.updateSearch}
                 className="form-control" placeholder="Search..."
@@ -154,4 +165,67 @@ class MeasureList extends React.Component {
   }
 }
 
-export default MeasureList
+/**
+ * Renders all categorical filters used (e.g. "year", "special election", etc.)
+ */
+class MeasureCategoricalFilter extends React.Component {
+  constructor(){
+    super()
+  }
+
+  selectYear(e){
+    var value = e.target.getAttribute('data-value')
+    var years = this.props.categorical_filters['years']
+    var value_idx = years.indexOf(value)
+
+    if(value_idx > -1){
+      years.splice(value_idx, 1)
+    } else {
+      years.push(value)
+    }
+
+    this.props.updateCategoricalFilters(years, 'years')
+  }
+
+
+  getYearsHtml(){
+    var self = this
+    var years = Object.keys(this.props.measures)
+
+    return years.map(function(year){
+      var selected = (self.props.categorical_filters['years'].indexOf(year) > -1)
+      var style = {}
+
+      if(selected){
+        style = {
+          color: 'white',
+          backgroundColor: 'green'
+        }
+      }
+
+      return (
+        <div key={year} style={style} data-value={year} 
+          className="cat-tag"
+          onClick={self.selectYear.bind(self)}>
+          {year}
+        </div>
+      )
+    })
+  }
+
+  render(){
+    var years = this.getYearsHtml()
+
+    return (
+      <div>
+        <h3>Election Years</h3>
+        {years}
+      </div>
+    )
+  }
+}
+
+export {
+  MeasureList,
+  MeasureCategoricalFilter
+}

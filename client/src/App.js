@@ -2,7 +2,7 @@ import React from 'react'
 import {BrowserRouter as Router, Link, Route} from 'react-router-dom'
 import axios from 'axios'
 import {ChoroplethMap, ChoroplethMapKey, SummaryStatistics} from './ChoroplethMap'
-import MeasureList from './MeasureList'
+import {MeasureList, MeasureCategoricalFilter} from './Measure'
 import './App.css'
 
 /**
@@ -35,6 +35,9 @@ class App extends React.Component {
       measure_descriptions: {},
       description: '',
       measure_search_text: '',
+      measure_categorical_filters: {
+        years: [],
+      },
 
       center_col_cls: 'col-md-7',
       left_col_cls: 'col-md-3',
@@ -177,8 +180,6 @@ class App extends React.Component {
    * @return geojson Object
    */
   getGeoJson(year, measure){
-    console.log(year, measure)
-
     var geojson = this.state.geojson;
     var results = this.state.results;
 
@@ -239,6 +240,21 @@ class App extends React.Component {
   }
 
   /**
+   * Updates the measure year filter so the top level can share and
+   * remember the currently selected year(s)
+   *
+   * @param measure_search_text string
+   */
+  updateMeasureCategoricalFilters(categorical_filter, type){
+    var measure_categorical_filters = this.state.measure_categorical_filters
+    measure_categorical_filters[type] = categorical_filter
+
+    this.setState({
+      measure_categorical_filters
+    })
+  }
+
+  /**
    * Returns the measure description given a year and measure
    *
    * @param year String
@@ -266,46 +282,48 @@ class App extends React.Component {
       <Router>
         <div>
           <div className="row">
-            <div className="col-md-12">
-              <h1><Link to="/">Oregon Ballot Measures</Link></h1>
-              <p>
-                {app_desc}
-              </p>
+            <div className="col-md-offset-1 col-md-10 col-sm-12">
+              <div className="site-title">
+                <Link to="/">Oregon Ballot Measures</Link>
+              </div>
               <hr />
             </div>
           </div>
 
           <Route exact={true} path="/" render={() => (
-            <div>
-              <MeasureList measures={self.state.measures_by_year} 
-                search_text={this.state.measure_search_text}
-                updateSearchText={this.updateMeasureSearchText.bind(this)}/>
+            <div className="row">
+              <div className="col-md-offset-1 col-md-3 col-sm-12">
+                <MeasureCategoricalFilter measures={self.state.measures_by_year} 
+                  categorical_filters={this.state.measure_categorical_filters}
+                  updateCategoricalFilters={this.updateMeasureCategoricalFilters.bind(this)}
+                />
+              </div>
+              <div className="col-md-7 col-sm-12">
+                <MeasureList measures={self.state.measures_by_year} 
+                  search_text={this.state.measure_search_text}
+                  updateSearchText={this.updateMeasureSearchText.bind(this)}
+                  categorical_filters={this.state.measure_categorical_filters}
+                />
+              </div>
             </div>
           )} />
 
           <Route path="/:year/:measure" render={({ match }) => (
-            <div className="row map-container">
-              <div className="search">
-                <span className="search-text">
-                  <Link to="/">Back to search</Link>
-                </span>
-              </div>
-              <div className="col-md-4">
-                <div className="map-title">
-                  Measure {match.params.measure} &mdash; {match.params.year}
+            <div className="row">
+              <div className="col-md-offset-1 col-md-3 col-sm-12">
+                <span className="map-title">Measure {match.params.measure}</span>
+                <div className="pull-right">
+                  <span className="text-muted measure-year">{match.params.year}</span>
                 </div>
-                <hr />
-                <SummaryStatistics data={self.getGeoJson(match.params.year, match.params.measure)} 
-                  colors={colors}/>
-                <hr />
-                <div className="title">
-                  Description
-                </div>
+                <div className="clearfix"></div>
+                <br />
                 <p>
                   {this.getMeasureDescription(match.params.year, match.params.measure)}
                 </p>
                 <hr />
-
+                <SummaryStatistics data={self.getGeoJson(match.params.year, match.params.measure)} 
+                  colors={colors}/>
+                <hr />
                 <div className="title">
                   Legend
                 </div>
@@ -325,7 +343,12 @@ class App extends React.Component {
                 </div>
               </div>
 
-              <div className="col-md-7">
+              <div className="col-md-7 col-sm-12 map-container">
+                <div className="search hidden-sm hidden-xs">
+                  <span className="search-text">
+                    <Link to="/">Back to search</Link>
+                  </span>
+                </div>
                 <ChoroplethMap
                   colors={colors} 
                   data={self.getGeoJson(match.params.year, match.params.measure)}

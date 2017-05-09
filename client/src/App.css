@@ -1,3 +1,27 @@
+a {
+  color: green;
+}
+
+a:hover, a:active, a:focus {
+  color: darkgreen;
+}
+
+
+.site-title {
+  padding-top: 10px;
+  font-size: 1.5em;
+  font-family: 'Merriweather', serif;
+}
+
+.site-title a:hover, .site-title a:active, .site-title a:focus {
+  color: green;
+  text-decoration: none;
+}
+
+.site-menu {
+  padding-top: 10px;
+}
+
 .map-title {
   font-size: 1.75em;
   font-family: 'Merriweather', serif;
@@ -22,5 +46,10 @@
 
 .measure-number {
   font-size: 3em;
+  font-family: 'Merriweather', serif;
+}
+
+.measure-year {
+  font-size: 1.75em;
   font-family: 'Merriweather', serif;
 }

@@ -143,21 +143,27 @@ class MeasureList extends React.Component {
       }
     })
 
+    if( grouped_item_list.length === 0 && Object.keys(this.props.measures).length > 0 ){
+      grouped_item_list = (
+        <h4>No Results</h4>
+      )
+    }
+
     return (
       <div>
         <div className="measure-list-container" style={this.state.style}>
           <div className="row">
-            <div className="col-md-8 col-sm-12">
+            <div className="col-md-10 col-sm-12">
               <br />
               <input type="text" value={this.state.search_text} 
                 onChange={this.updateSearch}
-                className="form-control" placeholder="Search..."
+                className="form-control input-mdlg" placeholder="Search..."
               />
+              <hr />
+              <div className="measure-list">
+                {grouped_item_list}
+              </div>
             </div>
-          </div>
-          <br />
-          <div className="measure-list">
-            {grouped_item_list}
           </div>
         </div>
       </div>

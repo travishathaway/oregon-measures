@@ -7,19 +7,40 @@ a:hover, a:active, a:focus {
 }
 
 
-.site-title {
+.form-control {
+  border-radius: 0px;
+  color: black;
+}
+
+.input-mdlg {
+  font-size: 1.1em;
+}
+
+.site-header a:hover, .site-header a:active, .site-header a:focus {
+  color: green;
+  text-decoration: none;
+}
+
+.site-header .site-title {
   padding-top: 10px;
   font-size: 1.5em;
   font-family: 'Merriweather', serif;
 }
 
-.site-title a:hover, .site-title a:active, .site-title a:focus {
-  color: green;
-  text-decoration: none;
+.site-header .site-menu {
+  font-size: 1.1em;
+  padding-top: 20px;
 }
 
-.site-menu {
-  padding-top: 10px;
+.site-header .site-menu .site-menu-link {
+  display: inline-block;
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: solid 1px #AAA;
+}
+
+.site-header .site-menu .site-menu-link:first-child {
+  border-left: none;
 }
 
 .map-title {

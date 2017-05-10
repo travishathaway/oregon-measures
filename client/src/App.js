@@ -3,6 +3,7 @@ import {BrowserRouter as Router, Link, Route} from 'react-router-dom'
 import axios from 'axios'
 import {ChoroplethMap, ChoroplethMapKey, SummaryStatistics} from './ChoroplethMap'
 import {MeasureList, MeasureCategoricalFilter} from './Measure'
+import About from './About'
 import './App.css'
 
 /**
@@ -281,8 +282,16 @@ class App extends React.Component {
     return (
       <Router>
         <div>
-          <div className="row">
+          <div className="row site-header">
             <div className="col-md-offset-1 col-md-10 col-sm-12">
+              <div className="pull-right site-menu">
+                <div className="site-menu-link">
+                  <Link to="/about">About</Link>
+                </div>
+                <div className="site-menu-link">
+                  <Link to="/">Search</Link>
+                </div>
+              </div>
               <div className="site-title">
                 <Link to="/">Oregon Ballot Measures</Link>
               </div>
@@ -290,85 +299,88 @@ class App extends React.Component {
             </div>
           </div>
 
-          <Route exact={true} path="/" render={() => (
-            <div className="row">
-              <div className="col-md-offset-1 col-md-3 col-sm-12">
-                <MeasureCategoricalFilter measures={self.state.measures_by_year} 
-                  categorical_filters={this.state.measure_categorical_filters}
-                  updateCategoricalFilters={this.updateMeasureCategoricalFilters.bind(this)}
-                />
-              </div>
-              <div className="col-md-7 col-sm-12">
-                <MeasureList measures={self.state.measures_by_year} 
-                  search_text={this.state.measure_search_text}
-                  updateSearchText={this.updateMeasureSearchText.bind(this)}
-                  categorical_filters={this.state.measure_categorical_filters}
-                />
-              </div>
-            </div>
-          )} />
-
-          <Route path="/:year/:measure" render={({ match }) => (
-            <div className="row">
-              <div className="col-md-offset-1 col-md-3 col-sm-12">
-                <span className="map-title">Measure {match.params.measure}</span>
-                <div className="pull-right">
-                  <span className="text-muted measure-year">{match.params.year}</span>
-                </div>
-                <div className="clearfix"></div>
-                <br />
-                <p>
-                  {this.getMeasureDescription(match.params.year, match.params.measure)}
-                </p>
-                <hr />
-                <SummaryStatistics data={self.getGeoJson(match.params.year, match.params.measure)} 
-                  colors={colors}/>
-                <hr />
-                <div className="title">
-                  Legend
-                </div>
+          <div className="row">
+            <div className="col-md-offset-1 col-md-10 col-sm-12">
+              <Route exact={true} path="/" render={() => (
                 <div className="row">
-                  <div className="col-md-6">
-                    <ChoroplethMapKey 
-                      colors={colors.slice(0, Math.round(colors.length / 2))}
-                      title="No Votes"
+                  <div className="col-md-3 col-sm-12">
+                    <MeasureCategoricalFilter measures={self.state.measures_by_year} 
+                      categorical_filters={this.state.measure_categorical_filters}
+                      updateCategoricalFilters={this.updateMeasureCategoricalFilters.bind(this)}
                     />
                   </div>
-                  <div className="col-md-6">
-                    <ChoroplethMapKey 
-                      colors={colors.slice(Math.round(colors.length / 2), colors.length).reverse()}
-                      title="Yes Votes"
+                  <div className="col-md-9 col-sm-12">
+                    <MeasureList measures={self.state.measures_by_year} 
+                      search_text={this.state.measure_search_text}
+                      updateSearchText={this.updateMeasureSearchText.bind(this)}
+                      categorical_filters={this.state.measure_categorical_filters}
                     />
                   </div>
                 </div>
-              </div>
+              )} />
 
-              <div className="col-md-7 col-sm-12 map-container">
-                <div className="search hidden-sm hidden-xs">
-                  <span className="search-text">
-                    <Link to="/">Back to search</Link>
-                  </span>
-                </div>
-                <ChoroplethMap
-                  colors={colors} 
-                  data={self.getGeoJson(match.params.year, match.params.measure)}
-                  valueProperty={(feature) => feature.properties.proportion}
-                  center={[-122, 45]}
-                  height={475}
-                  width={625}
-                  scale={(600 * 700) / 100 }
-                />
+              <Route path="/about" render={() => (
+                <About />
+              )} />
 
+              <Route path="/:year/:measure" render={({ match }) => (
                 <div className="row">
-                  <div className="col-md-offset-3 col-md-3">
+                  <div className="col-md-4 col-sm-12">
+                    <span className="map-title">Measure {match.params.measure}</span>
+                    <div className="pull-right">
+                      <span className="text-muted measure-year">{match.params.year}</span>
+                    </div>
+                    <div className="clearfix"></div>
+                    <br />
+                    <p>
+                      {this.getMeasureDescription(match.params.year, match.params.measure)}
+                    </p>
+                    <hr />
+                    <SummaryStatistics data={self.getGeoJson(match.params.year, match.params.measure)} 
+                      colors={colors}/>
+                    <hr />
+                    <div className="title">
+                      Legend
+                    </div>
+                    <div className="row">
+                      <div className="col-md-6">
+                        <ChoroplethMapKey 
+                          colors={colors.slice(0, Math.round(colors.length / 2))}
+                          title="No Votes"
+                        />
+                      </div>
+                      <div className="col-md-6">
+                        <ChoroplethMapKey 
+                          colors={colors.slice(Math.round(colors.length / 2), colors.length).reverse()}
+                          title="Yes Votes"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div className="col-md-3">
+
+                  <div className="col-md-7 col-sm-12 map-container">
+                    <ChoroplethMap
+                      colors={colors} 
+                      data={self.getGeoJson(match.params.year, match.params.measure)}
+                      valueProperty={(feature) => feature.properties.proportion}
+                      center={[-122, 45]}
+                      height={475}
+                      width={625}
+                      scale={(600 * 700) / 100 }
+                    />
+
+                    <div className="row">
+                      <div className="col-md-offset-3 col-md-3">
+                      </div>
+                      <div className="col-md-3">
+                      </div>
+                    </div>
+
                   </div>
                 </div>
-
-              </div>
+              )} />
             </div>
-          )} />
+          </div>
         </div>
       </Router>
     )

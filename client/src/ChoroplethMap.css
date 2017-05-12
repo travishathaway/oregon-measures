@@ -46,6 +46,10 @@ div.tooltip {
   border-bottom: none;
 }
 
+.tooltip table tr.won {
+  font-weight: bold;
+}
+
 .tooltip table td.desc {
   min-width: 35px;
 }
@@ -101,6 +105,7 @@ div.tooltip {
   margin-bottom: 5px;
   padding-left: 5px;
   background-color: #bbb;
+  position: relative;
 }
 
 .summary-statistics .result-bar .result-color {

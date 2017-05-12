@@ -118,26 +118,32 @@ class ChoroplethMap extends React.Component {
         .style('fill', self.getColor.bind(self))
         .style('line', 'white')
         .on('mousemove', function(d){
-          var yes_text = 'Yes:';
-          var no_text = 'No:';
-          var total_votes = d.properties.yes_votes + d.properties.no_votes;
+          var yes_text = 'Yes:'
+          var no_text = 'No:'
+          var yes_class, no_class = ''
+
+          var total_votes = d.properties.yes_votes + d.properties.no_votes
           var yes_percent = Math.round(
             d.properties.yes_votes / total_votes * 10000, 2
-          ) / 100;
+          ) / 100
           var no_percent = Math.round(
             d.properties.no_votes / total_votes * 10000, 2
-          ) / 100;
+          ) / 100
 
           var mouse = d3.mouse(svg.node()).map(function(d) {
-            return parseInt(d);
-          });
+            return parseInt(d)
+          })
 
-          d3.select(this).style('fill', '#DDD');
+          d3.select(this).style('fill', '#DDD')
+
 
           if(d.properties.no_votes > d.properties.yes_votes){
             no_text = '<b>No:</b>';
+            no_class = 'won'
+
           } else if( d.properties.yes_votes > d.properties.no_votes){
             yes_text = '<b>Yes:</b>';
+            yes_class = 'won'
           }
 
           tooltip.classed('hidden', false)
@@ -146,12 +152,12 @@ class ChoroplethMap extends React.Component {
               d.properties.name+ 
             '</div>'+
             '<table class="">'+
-              '<tr>'+
+              '<tr class="'+ yes_class +'">'+
                 '<td class="desc">'+yes_text+'</td>'+
                 '<td class="total">'+d.properties.yes_votes.toLocaleString()+'</td>'+
                 '<td class="percent">'+yes_percent+'%</td>'+
               '</tr>'+
-              '<tr>'+
+              '<tr class="'+ no_class +'">'+
                 '<td class="desc">'+no_text+'</td>'+
                 '<td class="total">'+d.properties.no_votes.toLocaleString()+'</td>'+
                 '<td class="percent">'+no_percent+'%</td>'+

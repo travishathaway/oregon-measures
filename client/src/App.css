@@ -64,12 +64,6 @@ a:hover, a:active, a:focus {
 .map-container .search .search-text {
   font-size: 1.5em;
 }
-
-.measure-number {
-  font-size: 3em;
-  font-family: 'Merriweather', serif;
-}
-
 .measure-year {
   font-size: 1.75em;
   font-family: 'Merriweather', serif;

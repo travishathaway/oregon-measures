@@ -46,7 +46,7 @@ div.tooltip {
   border-bottom: none;
 }
 
-.tooltip table tr.won {
+.tooltip table tr.won td {
   font-weight: bold;
 }
 

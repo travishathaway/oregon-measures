@@ -121,15 +121,18 @@ class MeasureList extends React.Component {
         var measures = measures_by_year[year]
         var measure_list = measures.map(function(meas){
           return (
-            <div key={year + ' ' + meas.measure}>
-              <div className="measure-list-item">
-                <div>
+            <div>
+              <div className="measure-list-item row" key={year + ' ' + meas.measure}>
+                <div className="measure-number col-md-2">
                   <Link to={`/${year}/${meas.measure}`}>
-                    Measure {meas.measure}
+                    {meas.measure}
                   </Link>
                 </div>
-                {meas.description}
+                <div className="measure-description col-md-9">
+                  {meas.description}
+                </div>
               </div>
+              <hr className="measure-list-item-sep"/>
             </div>
           )
         })

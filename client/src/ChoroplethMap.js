@@ -136,7 +136,6 @@ class ChoroplethMap extends React.Component {
 
           d3.select(this).style('fill', '#DDD')
 
-
           if(d.properties.no_votes > d.properties.yes_votes){
             no_text = '<b>No:</b>';
             no_class = 'won'

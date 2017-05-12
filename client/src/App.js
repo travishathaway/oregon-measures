@@ -37,7 +37,7 @@ class App extends React.Component {
       description: '',
       measure_search_text: '',
       measure_categorical_filters: {
-        years: [],
+        years: ['1996'],
       },
 
       center_col_cls: 'col-md-7',

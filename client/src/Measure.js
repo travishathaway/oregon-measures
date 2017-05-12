@@ -183,12 +183,13 @@ class MeasureCategoricalFilter extends React.Component {
     var value = e.target.getAttribute('data-value')
     var years = this.props.categorical_filters['years']
     var value_idx = years.indexOf(value)
+    var years = []
 
-    if(value_idx > -1){
-      years.splice(value_idx, 1)
-    } else {
+    //if(value_idx > -1){
+    //  years.splice(value_idx, 1)
+    //} else {
       years.push(value)
-    }
+    //}
 
     this.props.updateCategoricalFilters(years, 'years')
   }

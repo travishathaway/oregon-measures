@@ -60,3 +60,6 @@ env.sh
 .idea
 
 .DS_STORE
+
+# custom
+server/app.db

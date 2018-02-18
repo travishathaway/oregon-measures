@@ -74,12 +74,12 @@ class App extends React.Component {
     var self = this;
 
     axios.get(
-      '/json/geo.json'
+      '/static/json/geo.json'
     ).then(function(resp){
       var f_resp = resp
 
       axios.get(
-        '/json/measures.json'
+        '/static/json/measures.json'
       ).then(function(resp){
         var measures = resp.data.measures;
         var results = resp.data.results;

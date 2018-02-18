@@ -1,9 +1,4 @@
-import os
+DATABASE = '/Users/travishathaway/dev/oregon-measures/app.db'
+DEBUG = True
 
-PG_CONN_INFO = {
-    'host': os.getenv('APP_DB_HOST', '127.0.0.1'),
-    'port': os.getenv('APP_DB_PORT', 5432),
-    'user': os.getenv('APP_DB_USER'),
-    'password': os.getenv('APP_DB_PASS'),
-    'dbname': os.getenv('APP_DB_NAME')
-}
+SECRET_KEY = '\x08$?\x11\xcd\x9b\xf3%\xd0\xe2\xa10\xd7)\xdb\x07\xc2\xf9\x96n\x0c"!'

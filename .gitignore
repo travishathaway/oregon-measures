@@ -63,3 +63,5 @@ env.sh
 
 # custom
 server/app.db
+node_modules
+app.db

@@ -1,4 +1,4 @@
 flask
-psycopg2
-docopt
-gunicorn
+flask-login
+flask-bcrypt
+

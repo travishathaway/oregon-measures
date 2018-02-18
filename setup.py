@@ -1,8 +1,8 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 version = '0.1'
 
-description = "CLI tools for Oregon ballot measure data and web app"
+description = "Web app for Oregon Ballot Measures"
 
 setup(
     name="oregon_measures",
@@ -12,17 +12,12 @@ setup(
     description=description,
     author='Travis Hathaway',
     author_email='travis.j.hathaway@gmail.com',
-    packages=['oregon_measures', ],
+    packages=find_packages(),
     install_requires=[
-        'setuptools', 
-        'psycopg2', 
-        'click',
-        'flask'
+        'flask',
+        'flask-login',
+        'flask-bcrypt'
     ],
-    entry_points="""
-        [console_scripts]
-        om = oregon_measures.cli:cli
-    """,
     classifiers=[
         'Environment :: Console',
     ],

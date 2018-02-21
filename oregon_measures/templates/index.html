@@ -26,13 +26,14 @@
 </head>
 
 <body>
-  <div id="app"></div>
+  <div id="app">Something</div>
 
   <!-- Define global config object -->
   <script>
-    var oregonMeasure = {
-      'geo_json': '{{ url_for('static', filename='json/geo.json') }}'
-      'measures_json': '{{ url_for('static', filename='json/measures.json') }}'
+    window.oregonMeasureApp = {
+      'geoJson': '{{ url_for('static', filename='json/geo.json') }}',
+      'measuresJson': '{{ url_for('static', filename='json/measures.json') }}',
+      'apiUrl': '{{ API_URL }}'
     };
   </script>
 

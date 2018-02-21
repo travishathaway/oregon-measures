@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import chroma from 'chroma-js';
 import React from 'react';
-import './ChoroplethMap.css';
+import './css/choropleth_map.css';
 
 
 class ChoroplethMap extends React.Component {

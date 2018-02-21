@@ -1,10 +1,13 @@
 import sqlite3
 
+import psycopg2
 from flask import Flask, g
 from flask_login import LoginManager
 from flask_bcrypt import Bcrypt
 
-from .settings import DEBUG, SECRET_KEY, DATABASE
+from .settings import (
+    DEBUG, SECRET_KEY, DATABASE, MEASURES_DB
+)
 
 app = Flask('oregon-measures')
 
@@ -22,6 +25,14 @@ def get_db():
 
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
+    return db
+
+
+def get_measures_db():
+    db = getattr(g, '_measures_database', None)
+
+    if db is None:
+        db = g._measures_database = psycopg2.connect(MEASURES_DB)
     return db
 
 

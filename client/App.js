@@ -1,10 +1,10 @@
 import React from 'react'
 import {BrowserRouter as Router, Link, Route} from 'react-router-dom'
 import axios from 'axios'
-import {ChoroplethMap, ChoroplethMapKey, SummaryStatistics} from './ChoroplethMap'
-import {MeasureList, MeasureCategoricalFilter} from './Measure'
-import About from './About'
-import './App.css'
+import {ChoroplethMap, ChoroplethMapKey, SummaryStatistics} from './components/choropleth_map'
+import {MeasureList, MeasureCategoricalFilter} from './components/measure'
+import About from './components/about'
+import './app.css'
 
 /**
  * Colors we use to build our choropleth map

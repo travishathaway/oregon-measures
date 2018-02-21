@@ -1,6 +1,6 @@
 import React from 'react'
 import {Link} from 'react-router-dom'
-import './Measure.css'
+import './css/measure.css'
 
 
 /*
@@ -124,7 +124,7 @@ class MeasureList extends React.Component {
             <div>
               <div className="measure-list-item row" key={year + ' ' + meas.measure}>
                 <div className="measure-number col-md-2">
-                  <Link to={`/${year}/${meas.measure}`}>
+                  <Link to={`/measure/${year}/${meas.measure}`}>
                     {meas.measure}
                   </Link>
                 </div>

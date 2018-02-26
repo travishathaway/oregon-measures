@@ -1,6 +1,6 @@
 from flask_login.mixins import UserMixin
 from flask_bcrypt import generate_password_hash
-from .app import get_db
+from oregon_measures.app import get_db
 
 
 class User(UserMixin):

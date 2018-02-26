@@ -39,6 +39,13 @@ export function fetchMeasureFailure(error) {
   }
 }
 
+export function resetActiveMeasure() {
+  return {
+    type: RESET_ACTIVE_MEASURE,
+    payload: {}
+  }
+}
+
 export function fetchOregonGeojson(year, number) {
   const request = axios({
     method: 'get',

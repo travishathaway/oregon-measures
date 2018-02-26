@@ -1,16 +1,20 @@
 import os
 
-from psycopg2.extras import DictCursor
 from flask import (
-    Blueprint, render_template, jsonify, abort
+    Blueprint, render_template, jsonify, abort, request
 )
+from flasgger import swag_from
 
 from oregon_measures import settings
 from oregon_measures.app import get_measures_db
+from oregon_measures.models.measure import (
+    get_measures, get_measure
+)
 
 public = Blueprint(
     'public', __name__, template_folder='../templates'
 )
+
 
 @public.route('/', methods=["GET"])
 def admin_index():
@@ -30,56 +34,53 @@ def measure_detail(year, measure):
 
 
 @public.route('/api/measure', methods=['GET'])
+@swag_from('docs/measure_list.yml')
 def measures():
     """
     Endpoint for searching measures
     """
-    db = get_measures_db()
-    cursor = db.cursor()
+    measure_list = get_measures(request.args)
 
-    cursor.execute("SELECT * FROM measure LIMIT 25")
-
-    return jsonify([{
-        'id': row[0],
-        'number': row[1],
-        'description': row[2],
-        'date': row[3].isoformat(),
-        'year': row[3].year
-    } for row in cursor.fetchall()])
+    return jsonify(measure_list)
 
 
 @public.route('/api/measure/<year>/<number>', methods=['GET'])
+@swag_from('docs/measure.yml')
 def measures_detail(year, number):
     """
     Endpoint for searching measures
     """
+    try:
+        number, year = int(number), int(year)
+    except ValueError:
+        return abort(400, 'Invalid input provided')
+
+    meas = get_measure(year, number)
+
+    if meas:
+        return jsonify(meas)
+
+    abort(404)
+
+
+@public.route('/api/measure/years', methods=['GET'])
+def measure_years():
+    """
+    Returns the years for which we have measures
+    """
     db = get_measures_db()
     cursor = db.cursor()
 
-    cursor.execute("""
-    select row_to_json(t)
-      from (
-        select measure.id, measure.number, measure.date, measure.description,
-          (
-            select array_to_json(array_agg(row_to_json(d)))
-            from (
-              select yes_votes, no_votes, county_id
-              from measure_by_county
-              where measure_id=measure.id
-            ) d
-          ) as results
-        from measure
-        where number = %s
-        and extract(year from date) = %s
-      ) t
-    """, (number, year))
+    query = """
+        SELECT DISTINCT EXTRACT(year FROM date) 
+        FROM measure
+        ORDER BY EXTRACT(year FROM date) DESC
+    """
+    cursor.execute(query)
 
-    res = cursor.fetchone()
-
-    if res:
-        return jsonify(res[0])
-
-    abort(404)
+    return jsonify(
+        [r[0] for r in cursor.fetchall()]
+    )
 
 
 @public.context_processor

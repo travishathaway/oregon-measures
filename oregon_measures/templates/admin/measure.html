@@ -1,0 +1,92 @@
+{% extends "layout.html" %}
+
+{% block main %}
+<h1>Measure {{measure.number}}</h1>
+
+{% if measure.results %}
+<div class="pull-right">
+    <button id="edit-btn" class="btn btn-primary">Edit</button>
+</div>
+<div class="pull-right">
+    <button id="view-btn" class="btn btn-primary hidden">View</button>
+</div>
+{% endif %}
+
+<form action="" method="POST">
+    {{form.csrf_token}}
+    <div class="edit hidden">
+        <div class="form-group">
+            {{form.number.label}} {{form.number(class="form-control", type="number")}}
+        </div>
+        <div class="form-group">
+            {{form.date.label}} {{form.date(class="form-control", type="date")}}
+        </div>
+        <div class="form-group">
+            {{form.description.label}} {{form.description(class="form-control")}}
+        </div>
+    </div>
+    <table class="table">
+        <tr>
+            <th>County</th>
+            <th>Yes Votes</th>
+            <th>No Votes</th>
+        </tr>
+        {% if measure.results %}
+        {% for r in measure.results %}
+        <tr class="display">
+            <td>{{r.name}}</td>
+            <td>{{r.yes_votes}}</td>
+            <td>{{r.no_votes}}</td>
+        </tr>
+        {% endfor %}
+        {% endif %}
+        {% for r in counties %}
+        <tr class="edit {%if measure.results%}hidden{%endif%}">
+            <td>{{r.name}}</td>
+            <td>
+                <input class="form-control" type="number"
+                       value="{{r.yes_votes}}"
+                       name="yes_votes" />
+            </td>
+            <td>
+                <input class="form-control" type="number"
+                       value="{{r.no_votes}}"
+                       name="no_votes" />
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    <div class="form-group">
+        <input type="submit" value="Save" class="btn btn-primary"/>
+    </div>
+</form>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$(document).ready(function(){
+    var editing = false;
+
+    $('#edit-btn').on('click', function(){
+        $('#edit-btn').addClass('hidden');
+        $('#view-btn').removeClass('hidden');
+
+        $('.edit').removeClass('hidden');
+        $('.display').hide();
+
+        editing = true;
+    });
+
+    $('#view-btn').on('click', function(){
+        $('#view-btn').addClass('hidden');
+        $('#edit-btn').removeClass('hidden');
+
+        $('.edit').addClass('hidden');
+        $('.display').show();
+
+        editing = false;
+    });
+
+});
+</script>
+{% endblock %}

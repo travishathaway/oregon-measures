@@ -1,0 +1,29 @@
+Oregon Ballot Measure
+This is the endpoint to get an Oregon ballot measures. Just provide a year and a measure number.
+---
+parameters:
+  - name: year
+    in: path
+    type: string
+    required: true
+  - name: number
+    in: path
+    type: string
+    required: true
+definitions:
+  Palette:
+    type: object
+    properties:
+      palette_name:
+        type: array
+        items:
+          $ref: '#/definitions/Color'
+  Color:
+    type: string
+responses:
+  200:
+    description: Oregon ballot measure
+    schema:
+      $ref: '#/definitions/Palette'
+    examples:
+      rgb: ['red', 'green', 'blue']

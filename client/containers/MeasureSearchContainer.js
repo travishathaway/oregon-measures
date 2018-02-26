@@ -1,9 +1,9 @@
 import {connect} from 'react-redux';
 import {
-  fetchMeasures, fetchMeasuresSuccess, fetchMeasuresFailure,
-  resetMeasures, resetFilters
+    fetchMeasures, fetchMeasuresSuccess, fetchMeasuresFailure,
+    setFilters, resetMeasures
 } from '../actions/measure_list';
-import MeasureList from '../components/MeasureList';
+import MeasureSearch from '../components/MeasureSearch';
 
 
 const mapStateToProps = (state) => {
@@ -14,7 +14,7 @@ const mapStateToProps = (state) => {
 }
 
 
-const mapDispatchToProps = (dispatch, ownProps) => {
+const mapDispatchToProps = (dispatch) => {
   return {
     fetchMeasures: (filters) => {
       dispatch(
@@ -27,14 +27,14 @@ const mapDispatchToProps = (dispatch, ownProps) => {
         );
       });
     },
+    setFilters: (filters) => {
+      dispatch(setFilters(filters));
+    },
     resetMeasures: () => {
       dispatch(resetMeasures());
-    },
-    resetFilters: () => {
-      dispatch(resetFilters());
     }
   }
 }
 
 
-export default connect(mapStateToProps, mapDispatchToProps)(MeasureList);
+export default connect(mapStateToProps, mapDispatchToProps)(MeasureSearch);

@@ -1,5 +1,31 @@
 {% extends "layout.html" %}
 
 {% block main %}
-<h1>Oh Hai {{current_user.username}}</h1>
+<h1>Measures</h1>
+<table class="table">
+    <tr>
+        <th>Measure</th>
+        <th>Description</th>
+        <th>Date</th>
+        <th>Passed</th>
+    </tr>
+    {% for m in measure_list %}
+    <tr>
+        <td>
+            <a href="/admin/measure/{{m.year}}/{{m.number}}">
+                {{m.number}}
+            </a>
+        </td>
+        <td>
+            {{m.description}}
+        </td>
+        <td>
+            {{m.date}}
+        </td>
+        <td>
+            {%if m.passed %}Yes{%else%}No{%endif%}
+        </td>
+    </tr>
+    {% endfor %}
+</table>>
 {% endblock %}

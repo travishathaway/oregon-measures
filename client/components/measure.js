@@ -182,28 +182,29 @@ class MeasureCategoricalFilter extends React.Component {
     super()
   }
 
-  selectYear(e){
-    var value = e.target.getAttribute('data-value')
-    var years = this.props.categorical_filters['years']
-    var value_idx = years.indexOf(value)
-    var years = []
-
-    //if(value_idx > -1){
-    //  years.splice(value_idx, 1)
-    //} else {
-      years.push(value)
-    //}
-
-    this.props.updateCategoricalFilters(years, 'years')
+  componentWillMount() {
+    console.log(this.props.years.list);
+    if (this.props.years.list.length === 0) {
+      this.props.fetchMeasureYears();
+    }
   }
 
+  selectYear(e){
+    var value = e.target.getAttribute('data-value');
+    var filters = {'years': [Number(value)]};
+
+    filters = {...this.props.filters, ...filters};
+
+    this.props.setFilters(filters);
+    this.props.fetchMeasures(filters);
+  }
 
   getYearsHtml(){
-    var self = this
-    var years = Object.keys(this.props.measures)
+    const self = this;
+    const years = this.props.years.list;
 
     return years.map(function(year){
-      var selected = (self.props.categorical_filters['years'].indexOf(year) > -1)
+      var selected = (self.props.filters.years.indexOf(year) > -1)
       var style = {}
 
       if(selected){
@@ -228,7 +229,7 @@ class MeasureCategoricalFilter extends React.Component {
 
     return (
       <div>
-        <h3>Election Years</h3>
+        <h3>Years</h3>
         {years}
       </div>
     )

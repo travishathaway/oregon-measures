@@ -1,0 +1,20 @@
+Oregon Ballot Measures
+This is the endpoint to get a list of Oregon ballot measuress.
+---
+definitions:
+  Palette:
+    type: object
+    properties:
+      palette_name:
+        type: array
+        items:
+          $ref: '#/definitions/Color'
+  Color:
+    type: string
+responses:
+  200:
+    description: Oregon ballot measures
+    schema:
+      $ref: '#/definitions/Palette'
+    examples:
+      rgb: ['red', 'green', 'blue']

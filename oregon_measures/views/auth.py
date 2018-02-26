@@ -8,7 +8,7 @@ from flask_login import (
     logout_user, confirm_login
 )
 
-from oregon_measures.models import User
+from oregon_measures.models.auth import User
 
 auth = Blueprint(
     'auth', __name__, template_folder='templates'

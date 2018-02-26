@@ -16,11 +16,25 @@ const COLORS = [
 ]
 
 class MeasureDetail extends Component {
-  componentWillMount() {
-    this.props.fetchMeasure(this.props.year, this.props.number);
-    this.props.fetchOregonGeojson();
+  componentWillUnmount() {
+    //Important! If your component is navigating based on some global state(from say componentWillReceiveProps)
+    //always reset that global state back to null when you REMOUNT
+    this.props.resetActiveMeasure();
   }
 
+  componentWillMount() {
+    this.props.fetchMeasure(this.props.year, this.props.number);
+
+    if (!this.props.geojson.data) {
+      this.props.fetchOregonGeojson();
+    }
+  }
+
+  /**
+   * Hydrates the GeoJSON with data from the measure.
+   *
+   * @returns Array
+   */
   getGeoJson() {
     const detail = this.props.measure.detail;
     const geojson = this.props.geojson.data;
@@ -85,9 +99,6 @@ class MeasureDetail extends Component {
           <SummaryStatistics data={self.getGeoJson()} 
             colors={COLORS}/>
           <hr />
-          <div className="title">
-            Legend
-          </div>
           <div className="row">
             <div className="col-md-6">
               <ChoroplethMapKey 

@@ -286,9 +286,9 @@ class SummaryStatistics extends React.Component {
 
     return (
       <div className="summary-statistics">
-        <div className="title">
+        <h4 className="title">
           Results
-        </div>
+        </h4>
         <div>
           {yes_check}{yes_sp}
           <span style={(passed === 'Yes') ? bold_text : {}}>Yes</span> {yes_votes.toLocaleString()}

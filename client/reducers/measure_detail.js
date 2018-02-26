@@ -51,6 +51,15 @@ export default function(state = INITIAL_STATE, action){
         }
       }
 
+    case RESET_ACTIVE_MEASURE:
+      return { ...state, 
+        measure: {
+          detail: undefined,
+          error: null,
+          loading: false
+        }
+      }
+
     case FETCH_OREGON_GEOJSON:
       return { ...state,
         geojson: {

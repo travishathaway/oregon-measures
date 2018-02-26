@@ -25,6 +25,8 @@
     {% else %}
     <li><a href="/login">Login</a></li>
     {% endif %}
+    <li><a href="/admin">Admin</a></li>
+    <li><a href="/admin/measure">Create Measure</a></li>
 </ul>
     <div class="container">
         {% with messages = get_flashed_messages() %}
@@ -43,5 +45,6 @@
         <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
         <script src="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0-rc2/js/bootstrap.min.js"></script>
     {% endblock %}
+    {% block extra_scripts %}{% endblock %}
 </body>
 </html>

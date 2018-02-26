@@ -73,11 +73,11 @@
 	
 	var _MeasureDetail2 = _interopRequireDefault(_MeasureDetail);
 	
-	var _MeasureList = __webpack_require__(175);
+	var _MeasureList = __webpack_require__(251);
 	
 	var _MeasureList2 = _interopRequireDefault(_MeasureList);
 	
-	__webpack_require__(180);
+	__webpack_require__(256);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -10725,7 +10725,7 @@
 /* 130 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	'use strict';
+	"use strict";
 	
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -10768,13 +10768,54 @@
 	          loading: false
 	        }
 	      });
-	    case _measure_list.FETCH_MEASURES_FAILURE:
+	
+	    case _measure_list.RESET_MEASURES:
 	      return _extends({}, state, {
 	        measures: {
 	          list: [],
 	          error: null,
 	          loading: false
 	        }
+	      });
+	
+	    case _measure_list.FETCH_MEASURE_YEARS:
+	      return _extends({}, state, {
+	        years: {
+	          list: [],
+	          error: null,
+	          loading: true
+	        }
+	      });
+	
+	    case _measure_list.FETCH_MEASURE_YEARS_SUCCESS:
+	      return _extends({}, state, {
+	        years: {
+	          list: action.payload,
+	          error: null,
+	          loading: false
+	        }
+	      });
+	
+	    case _measure_list.FETCH_MEASURE_YEARS_FAILURE:
+	      error = action.payload || { message: action.payload.message };
+	
+	      return _extends({}, state, {
+	        years: {
+	          list: action.payload,
+	          error: error,
+	          loading: false
+	        }
+	      });
+	
+	    case _measure_list.SET_FILTERS:
+	      var filters = {};
+	
+	      if (state.filters !== undefined) {
+	        filters = state.filters;
+	      }
+	
+	      return _extends({}, state, {
+	        filters: _extends({}, filters, action.payload)
 	      });
 	
 	    default:
@@ -10786,6 +10827,15 @@
 	
 	var INITIAL_STATE = {
 	  measures: {
+	    list: [],
+	    error: null,
+	    loading: false
+	  },
+	  filters: {
+	    search: "",
+	    years: []
+	  },
+	  years: {
 	    list: [],
 	    error: null,
 	    loading: false
@@ -10801,10 +10851,16 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.RESET_MEASURES = exports.FETCH_MEASURES_FAILURE = exports.FETCH_MEASURES_SUCCESS = exports.FETCH_MEASURES = undefined;
+	exports.RESET_FILTERS = exports.SET_FILTERS = exports.FETCH_MEASURE_YEARS_FAILURE = exports.FETCH_MEASURE_YEARS_SUCCESS = exports.FETCH_MEASURE_YEARS = exports.RESET_MEASURES = exports.FETCH_MEASURES_FAILURE = exports.FETCH_MEASURES_SUCCESS = exports.FETCH_MEASURES = undefined;
 	exports.fetchMeasures = fetchMeasures;
 	exports.fetchMeasuresSuccess = fetchMeasuresSuccess;
 	exports.fetchMeasuresFailure = fetchMeasuresFailure;
+	exports.resetMeasures = resetMeasures;
+	exports.fetchMeasureYears = fetchMeasureYears;
+	exports.fetchMeasureYearsSuccess = fetchMeasureYearsSuccess;
+	exports.fetchMeasureYearsFailure = fetchMeasureYearsFailure;
+	exports.setFilters = setFilters;
+	exports.resetFilters = resetFilters;
 	
 	var _axios = __webpack_require__(132);
 	
@@ -10817,12 +10873,28 @@
 	var FETCH_MEASURES_FAILURE = exports.FETCH_MEASURES_FAILURE = 'FETCH_MEASURES_FAILURE';
 	var RESET_MEASURES = exports.RESET_MEASURES = 'RESET_MEASURES';
 	
+	var FETCH_MEASURE_YEARS = exports.FETCH_MEASURE_YEARS = 'FETCH_MEASURE_YEARS';
+	var FETCH_MEASURE_YEARS_SUCCESS = exports.FETCH_MEASURE_YEARS_SUCCESS = 'FETCH_MEASURE_YEARS_SUCCESS';
+	var FETCH_MEASURE_YEARS_FAILURE = exports.FETCH_MEASURE_YEARS_FAILURE = 'FETCH_MEASURE_YEARS_FAILURE';
+	
+	var SET_FILTERS = exports.SET_FILTERS = 'SET_FILTERS';
+	var RESET_FILTERS = exports.RESET_FILTERS = 'RESET_FILTERS';
+	
 	var ROOT_URL = window.oregonMeasureApp.apiUrl;
 	
-	function fetchMeasures() {
+	/**
+	 * Fetches measures and allows for passing in search
+	 * terms
+	 *
+	 * @param search string
+	 *
+	 * @return object
+	 */
+	function fetchMeasures(params) {
 	  var request = (0, _axios2.default)({
 	    method: 'get',
-	    url: ROOT_URL + '/measure'
+	    url: ROOT_URL + '/measure',
+	    params: params
 	  });
 	
 	  return {
@@ -10842,6 +10914,68 @@
 	  return {
 	    type: FETCH_MEASURES_FAILURE,
 	    payload: error
+	  };
+	}
+	
+	function resetMeasures() {
+	  return {
+	    type: RESET_MEASURES,
+	    payload: []
+	  };
+	}
+	
+	/**
+	 * Fetches all the years which we have measures for
+	 *
+	 * @param search string
+	 *
+	 * @return object
+	 */
+	function fetchMeasureYears(params) {
+	  var request = (0, _axios2.default)({
+	    method: 'get',
+	    url: ROOT_URL + '/measure/years',
+	    params: params
+	  });
+	
+	  return {
+	    type: FETCH_MEASURE_YEARS,
+	    payload: request
+	  };
+	}
+	
+	function fetchMeasureYearsSuccess(years) {
+	  return {
+	    type: FETCH_MEASURE_YEARS_SUCCESS,
+	    payload: years
+	  };
+	}
+	
+	function fetchMeasureYearsFailure(error) {
+	  return {
+	    type: FETCH_MEASURE_YEARS_FAILURE,
+	    payload: error
+	  };
+	}
+	
+	/**
+	 * Updates the current search term
+	 *
+	 * @param search string
+	 *
+	 * @return object
+	 */
+	function setFilters(search) {
+	  return {
+	    type: SET_FILTERS,
+	    payload: search
+	  };
+	}
+	
+	function resetFilters() {
+	  return {
+	    type: SET_FILTERS,
+	    payload: {}
 	  };
 	}
 
@@ -12438,6 +12572,15 @@
 	        }
 	      });
 	
+	    case _measure_detail.RESET_ACTIVE_MEASURE:
+	      return _extends({}, state, {
+	        measure: {
+	          detail: undefined,
+	          error: null,
+	          loading: false
+	        }
+	      });
+	
 	    case _measure_detail.FETCH_OREGON_GEOJSON:
 	      return _extends({}, state, {
 	        geojson: {
@@ -12500,6 +12643,7 @@
 	exports.fetchMeasure = fetchMeasure;
 	exports.fetchMeasureSuccess = fetchMeasureSuccess;
 	exports.fetchMeasureFailure = fetchMeasureFailure;
+	exports.resetActiveMeasure = resetActiveMeasure;
 	exports.fetchOregonGeojson = fetchOregonGeojson;
 	exports.fetchOregonGeojsonSuccess = fetchOregonGeojsonSuccess;
 	exports.fetchOregonGeojsonFailure = fetchOregonGeojsonFailure;
@@ -12545,6 +12689,13 @@
 	  return {
 	    type: FETCH_MEASURE_FAILURE,
 	    payload: error
+	  };
+	}
+	
+	function resetActiveMeasure() {
+	  return {
+	    type: RESET_ACTIVE_MEASURE,
+	    payload: {}
 	  };
 	}
 	
@@ -13901,6 +14052,9 @@
 	      dispatch((0, _measure_detail.fetchOregonGeojson)()).then(function (response) {
 	        !response.error ? dispatch((0, _measure_detail.fetchOregonGeojsonSuccess)(response.payload.data)) : dispatch((0, _measure_detail.fetchOregonGeojsonFailure)(response.payload.data));
 	      });
+	    },
+	    resetActiveMeasure: function resetActiveMeasure() {
+	      dispatch((0, _measure_detail.resetActiveMeasure)());
 	    }
 	  };
 	};
@@ -13923,7 +14077,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _choropleth_map = __webpack_require__(182);
+	var _choropleth_map = __webpack_require__(175);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -13951,11 +14105,28 @@
 	  }
 	
 	  _createClass(MeasureDetail, [{
+	    key: 'componentWillUnmount',
+	    value: function componentWillUnmount() {
+	      //Important! If your component is navigating based on some global state(from say componentWillReceiveProps)
+	      //always reset that global state back to null when you REMOUNT
+	      this.props.resetActiveMeasure();
+	    }
+	  }, {
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
 	      this.props.fetchMeasure(this.props.year, this.props.number);
-	      this.props.fetchOregonGeojson();
+	
+	      if (!this.props.geojson.data) {
+	        this.props.fetchOregonGeojson();
+	      }
 	    }
+	
+	    /**
+	     * Hydrates the GeoJSON with data from the measure.
+	     *
+	     * @returns Array
+	     */
+	
 	  }, {
 	    key: 'getGeoJson',
 	    value: function getGeoJson() {
@@ -14066,11 +14237,6 @@
 	          _react2.default.createElement('hr', null),
 	          _react2.default.createElement(
 	            'div',
-	            { className: 'title' },
-	            'Legend'
-	          ),
-	          _react2.default.createElement(
-	            'div',
 	            { className: 'row' },
 	            _react2.default.createElement(
 	              'div',
@@ -14129,316 +14295,15 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(2);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _header = __webpack_require__(168);
-	
-	var _header2 = _interopRequireDefault(_header);
-	
-	var _MeasureListContainer = __webpack_require__(176);
-	
-	var _MeasureListContainer2 = _interopRequireDefault(_MeasureListContainer);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var MeasureList = function (_Component) {
-	  _inherits(MeasureList, _Component);
-	
-	  function MeasureList() {
-	    _classCallCheck(this, MeasureList);
-	
-	    return _possibleConstructorReturn(this, (MeasureList.__proto__ || Object.getPrototypeOf(MeasureList)).apply(this, arguments));
-	  }
-	
-	  _createClass(MeasureList, [{
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'container' },
-	        _react2.default.createElement(_header2.default, null),
-	        _react2.default.createElement(_MeasureListContainer2.default, null)
-	      );
-	    }
-	  }]);
-	
-	  return MeasureList;
-	}(_react.Component);
-	
-	exports.default = MeasureList;
-
-/***/ }),
-/* 176 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _reactRedux = __webpack_require__(14);
-	
-	var _measure_list = __webpack_require__(131);
-	
-	var _MeasureList = __webpack_require__(177);
-	
-	var _MeasureList2 = _interopRequireDefault(_MeasureList);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	var mapStateToProps = function mapStateToProps(state) {
-	  return {
-	    measures: state.measureList.measures
-	  };
-	};
-	
-	var mapDispatchToProps = function mapDispatchToProps(dispatch) {
-	  return {
-	    fetchMeasures: function fetchMeasures() {
-	      dispatch((0, _measure_list.fetchMeasures)()).then(function (response) {
-	        !response.error ? dispatch((0, _measure_list.fetchMeasuresSuccess)(response.payload.data)) : dispatch((0, _measure_list.fetchMeasuresFailure)(response.payload.data));
-	      });
-	    }
-	  };
-	};
-	
-	exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(_MeasureList2.default);
-
-/***/ }),
-/* 177 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(2);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _reactRouterDom = __webpack_require__(43);
-	
-	__webpack_require__(178);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var MeasureList = function (_Component) {
-	  _inherits(MeasureList, _Component);
-	
-	  function MeasureList() {
-	    _classCallCheck(this, MeasureList);
-	
-	    return _possibleConstructorReturn(this, (MeasureList.__proto__ || Object.getPrototypeOf(MeasureList)).apply(this, arguments));
-	  }
-	
-	  _createClass(MeasureList, [{
-	    key: 'componentWillMount',
-	    value: function componentWillMount() {
-	      this.props.fetchMeasures();
-	    }
-	  }, {
-	    key: 'renderMeasures',
-	    value: function renderMeasures(measures) {
-	      return measures.map(function (meas) {
-	        return _react2.default.createElement(
-	          'div',
-	          null,
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'measure-list-item row', key: meas.id },
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'measure-number col-md-2' },
-	              _react2.default.createElement(
-	                _reactRouterDom.Link,
-	                { to: '/measure/' + meas.year + '/' + meas.number },
-	                meas.number
-	              )
-	            ),
-	            _react2.default.createElement(
-	              'div',
-	              { className: 'measure-description col-md-9' },
-	              meas.description
-	            )
-	          ),
-	          _react2.default.createElement('hr', { className: 'measure-list-item-sep' })
-	        );
-	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var _props$measures = this.props.measures,
-	          list = _props$measures.list,
-	          loading = _props$measures.loading,
-	          error = _props$measures.error;
-	
-	
-	      if (loading) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'container' },
-	          _react2.default.createElement(
-	            'h1',
-	            null,
-	            'Posts'
-	          ),
-	          _react2.default.createElement(
-	            'h3',
-	            null,
-	            'Loading...'
-	          )
-	        );
-	      } else if (error) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'alert alert-danger' },
-	          'Error: ',
-	          error.message
-	        );
-	      }
-	
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'row' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'col-md-offset-1 col-md-10 col-sm-12' },
-	          _react2.default.createElement(
-	            'ul',
-	            { className: 'list-group' },
-	            this.renderMeasures(list)
-	          )
-	        )
-	      );
-	    }
-	  }]);
-	
-	  return MeasureList;
-	}(_react.Component);
-	
-	exports.default = MeasureList;
-
-/***/ }),
-/* 178 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(179);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(172)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!../../../node_modules/css-loader/index.js!./measure.css", function() {
-				var newContent = require("!!../../../node_modules/css-loader/index.js!./measure.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ }),
-/* 179 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(171)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, ".measure-list-item {\n  padding: 10px;\n  margin-top: 0px;\n}\n\n.measure-list-item .measure-number {\n  font-size: 2.5em;\n  font-family: 'Merriweather', serif;\n  margin-right: -5px;\n}\n\n.measure-list-item .measure-number a:hover, \n.measure-list-item .measure-number a:active, \n.measure-list-item .measure-number a:focus { \n  color: green;\n  text-decoration: none;\n}\n\n.measure-list-item .measure-description {\n  border-left: solid 1px #ddd;\n  padding: 15px;\n}\n\n.measure-list-item a {\n  font-size: 1.25em;\n}\n\nhr.measure-list-item-sep {\n  margin-top: 5px;\n  margin-bottom: 5px;\n  border: none;\n  border-bottom: solid 1px #ddd;\n}\n\n.measure-list-item-year {\n  font-size: 2em;\n  font-family: 'Merriweather', serif;\n  border-bottom: 1px solid #DDD;\n  margin-bottom: 5px;\n  padding-bottom: 10px;\n}\n.measure-list-item.active {\n  background-color: #EEE;\n}\n\n.measure-list-item.active .measure-number {\n  color: #337ab7;\n  font-weight: bold;\n  font-size: 3em;\n  font-family: 'Merriweather', serif;\n}\n\n.cat-tag {\n  display: inline-block;\n  cursor: pointer;\n  padding: 3px 7px;\n  margin: 3px;\n  border: solid 1px #DDD;\n  border-radius: 5px 5px;\n}\n\n.cat-tag:hover {\n  background-color: #DDD;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ }),
-/* 180 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	// style-loader: Adds some css to the DOM by adding a <style> tag
-	
-	// load the styles
-	var content = __webpack_require__(181);
-	if(typeof content === 'string') content = [[module.id, content, '']];
-	// add the styles to the DOM
-	var update = __webpack_require__(172)(content, {});
-	if(content.locals) module.exports = content.locals;
-	// Hot Module Replacement
-	if(false) {
-		// When the styles change, update the <style> tags
-		if(!content.locals) {
-			module.hot.accept("!!../node_modules/css-loader/index.js!./app.css", function() {
-				var newContent = require("!!../node_modules/css-loader/index.js!./app.css");
-				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
-				update(newContent);
-			});
-		}
-		// When the module is disposed, remove the <style> tags
-		module.hot.dispose(function() { update(); });
-	}
-
-/***/ }),
-/* 181 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	exports = module.exports = __webpack_require__(171)();
-	// imports
-	
-	
-	// module
-	exports.push([module.id, "a {\n  color: green;\n}\n\na:hover, a:active, a:focus {\n  color: darkgreen;\n}\n\n\n.form-control {\n  border-radius: 0px;\n  color: black;\n}\n\n.input-mdlg {\n  font-size: 1.1em;\n}\n\n.site-header a:hover, .site-header a:active, .site-header a:focus {\n  color: green;\n  text-decoration: none;\n}\n\n.site-header .site-title {\n  padding-top: 10px;\n  font-size: 1.5em;\n  font-family: 'Merriweather', serif;\n}\n\n.site-header .site-menu {\n  font-size: 1.1em;\n  padding-top: 20px;\n}\n\n.site-header .site-menu .site-menu-link {\n  display: inline-block;\n  margin-left: 10px;\n  padding-left: 10px;\n  border-left: solid 1px #AAA;\n}\n\n.site-header .site-menu .site-menu-link:first-child {\n  border-left: none;\n}\n\n.map-title {\n  font-size: 1.75em;\n  font-family: 'Merriweather', serif;\n}\n\n.map-container {\n  position: relative;\n}\n\n.map-container .search {\n  position: absolute;\n  top: 0px;\n  right: 15px;\n  z-index: 9998;\n  font-family: 'Merriweather', serif;\n}\n\n.map-container .search .glyphicon.glyphicon-search, \n.map-container .search .search-text {\n  font-size: 1.5em;\n}\n.measure-year {\n  font-size: 1.75em;\n  font-family: 'Merriweather', serif;\n}\n", ""]);
-	
-	// exports
-
-
-/***/ }),
-/* 182 */
-/***/ (function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
 	exports.SummaryStatistics = exports.ChoroplethMapKey = exports.ChoroplethMap = undefined;
 	
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 	
-	var _d = __webpack_require__(183);
+	var _d = __webpack_require__(176);
 	
 	var d3 = _interopRequireWildcard(_d);
 	
-	var _chromaJs = __webpack_require__(255);
+	var _chromaJs = __webpack_require__(248);
 	
 	var _chromaJs2 = _interopRequireDefault(_chromaJs);
 	
@@ -14446,7 +14311,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	__webpack_require__(256);
+	__webpack_require__(249);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -14775,7 +14640,7 @@
 	        'div',
 	        { className: 'summary-statistics' },
 	        _react2.default.createElement(
-	          'div',
+	          'h4',
 	          { className: 'title' },
 	          'Results'
 	        ),
@@ -14823,43 +14688,43 @@
 	exports.SummaryStatistics = SummaryStatistics;
 
 /***/ }),
-/* 183 */
+/* 176 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	Object.defineProperty(exports, '__esModule', { value: true });
 	
-	var d3Array = __webpack_require__(184);
-	var d3Axis = __webpack_require__(185);
-	var d3Brush = __webpack_require__(186);
-	var d3Chord = __webpack_require__(195);
-	var d3Collection = __webpack_require__(197);
-	var d3Color = __webpack_require__(191);
-	var d3Dispatch = __webpack_require__(187);
-	var d3Drag = __webpack_require__(188);
-	var d3Dsv = __webpack_require__(198);
-	var d3Ease = __webpack_require__(194);
-	var d3Force = __webpack_require__(199);
-	var d3Format = __webpack_require__(201);
-	var d3Geo = __webpack_require__(202);
-	var d3Hierarchy = __webpack_require__(203);
-	var d3Interpolate = __webpack_require__(190);
-	var d3Path = __webpack_require__(196);
-	var d3Polygon = __webpack_require__(204);
-	var d3Quadtree = __webpack_require__(200);
-	var d3Queue = __webpack_require__(205);
-	var d3Random = __webpack_require__(206);
-	var d3Request = __webpack_require__(207);
-	var d3Scale = __webpack_require__(249);
-	var d3Selection = __webpack_require__(189);
-	var d3Shape = __webpack_require__(252);
-	var d3Time = __webpack_require__(250);
-	var d3TimeFormat = __webpack_require__(251);
-	var d3Timer = __webpack_require__(193);
-	var d3Transition = __webpack_require__(192);
-	var d3Voronoi = __webpack_require__(253);
-	var d3Zoom = __webpack_require__(254);
+	var d3Array = __webpack_require__(177);
+	var d3Axis = __webpack_require__(178);
+	var d3Brush = __webpack_require__(179);
+	var d3Chord = __webpack_require__(188);
+	var d3Collection = __webpack_require__(190);
+	var d3Color = __webpack_require__(184);
+	var d3Dispatch = __webpack_require__(180);
+	var d3Drag = __webpack_require__(181);
+	var d3Dsv = __webpack_require__(191);
+	var d3Ease = __webpack_require__(187);
+	var d3Force = __webpack_require__(192);
+	var d3Format = __webpack_require__(194);
+	var d3Geo = __webpack_require__(195);
+	var d3Hierarchy = __webpack_require__(196);
+	var d3Interpolate = __webpack_require__(183);
+	var d3Path = __webpack_require__(189);
+	var d3Polygon = __webpack_require__(197);
+	var d3Quadtree = __webpack_require__(193);
+	var d3Queue = __webpack_require__(198);
+	var d3Random = __webpack_require__(199);
+	var d3Request = __webpack_require__(200);
+	var d3Scale = __webpack_require__(242);
+	var d3Selection = __webpack_require__(182);
+	var d3Shape = __webpack_require__(245);
+	var d3Time = __webpack_require__(243);
+	var d3TimeFormat = __webpack_require__(244);
+	var d3Timer = __webpack_require__(186);
+	var d3Transition = __webpack_require__(185);
+	var d3Voronoi = __webpack_require__(246);
+	var d3Zoom = __webpack_require__(247);
 	
 	var version = "4.13.0";
 	
@@ -14898,7 +14763,7 @@
 
 
 /***/ }),
-/* 184 */
+/* 177 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-array/ Version 1.2.1. Copyright 2017 Mike Bostock.
@@ -15494,7 +15359,7 @@
 
 
 /***/ }),
-/* 185 */
+/* 178 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-axis/ Version 1.0.8. Copyright 2017 Mike Bostock.
@@ -15693,12 +15558,12 @@
 
 
 /***/ }),
-/* 186 */
+/* 179 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-brush/ Version 1.0.4. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(187), __webpack_require__(188), __webpack_require__(190), __webpack_require__(189), __webpack_require__(192)) :
+		 true ? factory(exports, __webpack_require__(180), __webpack_require__(181), __webpack_require__(183), __webpack_require__(182), __webpack_require__(185)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-dispatch', 'd3-drag', 'd3-interpolate', 'd3-selection', 'd3-transition'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3,global.d3,global.d3,global.d3));
 	}(this, (function (exports,d3Dispatch,d3Drag,d3Interpolate,d3Selection,d3Transition) { 'use strict';
@@ -16266,7 +16131,7 @@
 
 
 /***/ }),
-/* 187 */
+/* 180 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-dispatch/ Version 1.0.3. Copyright 2017 Mike Bostock.
@@ -16367,12 +16232,12 @@
 
 
 /***/ }),
-/* 188 */
+/* 181 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-drag/ Version 1.2.1. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(187), __webpack_require__(189)) :
+		 true ? factory(exports, __webpack_require__(180), __webpack_require__(182)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-dispatch', 'd3-selection'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3));
 	}(this, (function (exports,d3Dispatch,d3Selection) { 'use strict';
@@ -16607,7 +16472,7 @@
 
 
 /***/ }),
-/* 189 */
+/* 182 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-selection/ Version 1.3.0. Copyright 2018 Mike Bostock.
@@ -17608,12 +17473,12 @@
 
 
 /***/ }),
-/* 190 */
+/* 183 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-interpolate/ Version 1.1.6. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(191)) :
+		 true ? factory(exports, __webpack_require__(184)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-color'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3));
 	}(this, (function (exports,d3Color) { 'use strict';
@@ -18159,7 +18024,7 @@
 
 
 /***/ }),
-/* 191 */
+/* 184 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-color/ Version 1.0.3. Copyright 2017 Mike Bostock.
@@ -18688,12 +18553,12 @@
 
 
 /***/ }),
-/* 192 */
+/* 185 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-transition/ Version 1.1.1. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(189), __webpack_require__(187), __webpack_require__(193), __webpack_require__(190), __webpack_require__(191), __webpack_require__(194)) :
+		 true ? factory(exports, __webpack_require__(182), __webpack_require__(180), __webpack_require__(186), __webpack_require__(183), __webpack_require__(184), __webpack_require__(187)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-selection', 'd3-dispatch', 'd3-timer', 'd3-interpolate', 'd3-color', 'd3-ease'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3,global.d3,global.d3,global.d3,global.d3));
 	}(this, (function (exports,d3Selection,d3Dispatch,d3Timer,d3Interpolate,d3Color,d3Ease) { 'use strict';
@@ -19481,7 +19346,7 @@
 
 
 /***/ }),
-/* 193 */
+/* 186 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-timer/ Version 1.0.7. Copyright 2017 Mike Bostock.
@@ -19636,7 +19501,7 @@
 
 
 /***/ }),
-/* 194 */
+/* 187 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-ease/ Version 1.0.3. Copyright 2017 Mike Bostock.
@@ -19901,12 +19766,12 @@
 
 
 /***/ }),
-/* 195 */
+/* 188 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-chord/ Version 1.0.4. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-	   true ? factory(exports, __webpack_require__(184), __webpack_require__(196)) :
+	   true ? factory(exports, __webpack_require__(177), __webpack_require__(189)) :
 	  typeof define === 'function' && define.amd ? define(['exports', 'd3-array', 'd3-path'], factory) :
 	  (factory((global.d3 = global.d3 || {}),global.d3,global.d3));
 	}(this, (function (exports,d3Array,d3Path) { 'use strict';
@@ -20137,7 +20002,7 @@
 
 
 /***/ }),
-/* 196 */
+/* 189 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-path/ Version 1.0.5. Copyright 2017 Mike Bostock.
@@ -20284,7 +20149,7 @@
 
 
 /***/ }),
-/* 197 */
+/* 190 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-collection/ Version 1.0.4. Copyright 2017 Mike Bostock.
@@ -20507,7 +20372,7 @@
 
 
 /***/ }),
-/* 198 */
+/* 191 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-dsv/ Version 1.0.8. Copyright 2017 Mike Bostock.
@@ -20675,12 +20540,12 @@
 
 
 /***/ }),
-/* 199 */
+/* 192 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-force/ Version 1.1.0. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(200), __webpack_require__(197), __webpack_require__(187), __webpack_require__(193)) :
+		 true ? factory(exports, __webpack_require__(193), __webpack_require__(190), __webpack_require__(180), __webpack_require__(186)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-quadtree', 'd3-collection', 'd3-dispatch', 'd3-timer'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3,global.d3,global.d3));
 	}(this, (function (exports,d3Quadtree,d3Collection,d3Dispatch,d3Timer) { 'use strict';
@@ -21341,7 +21206,7 @@
 
 
 /***/ }),
-/* 200 */
+/* 193 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-quadtree/ Version 1.0.3. Copyright 2017 Mike Bostock.
@@ -21782,7 +21647,7 @@
 
 
 /***/ }),
-/* 201 */
+/* 194 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-format/ Version 1.2.2. Copyright 2018 Mike Bostock.
@@ -22119,12 +21984,12 @@
 
 
 /***/ }),
-/* 202 */
+/* 195 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-geo/ Version 1.9.1. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(184)) :
+		 true ? factory(exports, __webpack_require__(177)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-array'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3));
 	}(this, (function (exports,d3Array) { 'use strict';
@@ -25170,7 +25035,7 @@
 
 
 /***/ }),
-/* 203 */
+/* 196 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-hierarchy/ Version 1.1.5. Copyright 2017 Mike Bostock.
@@ -26463,7 +26328,7 @@
 
 
 /***/ }),
-/* 204 */
+/* 197 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-polygon/ Version 1.0.3. Copyright 2017 Mike Bostock.
@@ -26619,7 +26484,7 @@
 
 
 /***/ }),
-/* 205 */
+/* 198 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-queue/ Version 3.0.7. Copyright 2017 Mike Bostock.
@@ -26759,7 +26624,7 @@
 
 
 /***/ }),
-/* 206 */
+/* 199 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-random/ Version 1.1.0. Copyright 2017 Mike Bostock.
@@ -26880,18 +26745,18 @@
 
 
 /***/ }),
-/* 207 */
+/* 200 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var XMLHttpRequest = __webpack_require__(208).XMLHttpRequest;
+	var XMLHttpRequest = __webpack_require__(201).XMLHttpRequest;
 	
 	Object.defineProperty(exports, '__esModule', { value: true });
 	
-	var d3Collection = __webpack_require__(197);
-	var d3Dispatch = __webpack_require__(187);
-	var d3Dsv = __webpack_require__(198);
+	var d3Collection = __webpack_require__(190);
+	var d3Dispatch = __webpack_require__(180);
+	var d3Dsv = __webpack_require__(191);
 	
 	var request = function(url, callback) {
 	  var request,
@@ -27101,7 +26966,7 @@
 
 
 /***/ }),
-/* 208 */
+/* 201 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer, process) {/**
@@ -27117,9 +26982,9 @@
 	 * @license MIT
 	 */
 	
-	var Url = __webpack_require__(213);
-	var spawn = __webpack_require__(219).spawn;
-	var fs = __webpack_require__(219);
+	var Url = __webpack_require__(206);
+	var spawn = __webpack_require__(212).spawn;
+	var fs = __webpack_require__(212);
 	
 	exports.XMLHttpRequest = function() {
 	  "use strict";
@@ -27128,8 +26993,8 @@
 	   * Private variables
 	   */
 	  var self = this;
-	  var http = __webpack_require__(220);
-	  var https = __webpack_require__(248);
+	  var http = __webpack_require__(213);
+	  var https = __webpack_require__(241);
 	
 	  // Holds http.js objects
 	  var request;
@@ -27725,10 +27590,10 @@
 	  };
 	};
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer, __webpack_require__(3)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(202).Buffer, __webpack_require__(3)))
 
 /***/ }),
-/* 209 */
+/* 202 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {/*!
@@ -27741,9 +27606,9 @@
 	
 	'use strict'
 	
-	var base64 = __webpack_require__(210)
-	var ieee754 = __webpack_require__(211)
-	var isArray = __webpack_require__(212)
+	var base64 = __webpack_require__(203)
+	var ieee754 = __webpack_require__(204)
+	var isArray = __webpack_require__(205)
 	
 	exports.Buffer = Buffer
 	exports.SlowBuffer = SlowBuffer
@@ -29524,7 +29389,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 210 */
+/* 203 */
 /***/ (function(module, exports) {
 
 	'use strict'
@@ -29646,7 +29511,7 @@
 
 
 /***/ }),
-/* 211 */
+/* 204 */
 /***/ (function(module, exports) {
 
 	exports.read = function (buffer, offset, isLE, mLen, nBytes) {
@@ -29736,7 +29601,7 @@
 
 
 /***/ }),
-/* 212 */
+/* 205 */
 /***/ (function(module, exports) {
 
 	var toString = {}.toString;
@@ -29747,7 +29612,7 @@
 
 
 /***/ }),
-/* 213 */
+/* 206 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -29773,8 +29638,8 @@
 	
 	'use strict';
 	
-	var punycode = __webpack_require__(214);
-	var util = __webpack_require__(215);
+	var punycode = __webpack_require__(207);
+	var util = __webpack_require__(208);
 	
 	exports.parse = urlParse;
 	exports.resolve = urlResolve;
@@ -29849,7 +29714,7 @@
 	      'gopher:': true,
 	      'file:': true
 	    },
-	    querystring = __webpack_require__(216);
+	    querystring = __webpack_require__(209);
 	
 	function urlParse(url, parseQueryString, slashesDenoteHost) {
 	  if (url && util.isObject(url) && url instanceof Url) return url;
@@ -30485,7 +30350,7 @@
 
 
 /***/ }),
-/* 214 */
+/* 207 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module, global) {/*! https://mths.be/punycode v1.3.2 by @mathias */
@@ -31020,7 +30885,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(34)(module), (function() { return this; }())))
 
 /***/ }),
-/* 215 */
+/* 208 */
 /***/ (function(module, exports) {
 
 	'use strict';
@@ -31042,17 +30907,17 @@
 
 
 /***/ }),
-/* 216 */
+/* 209 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	exports.decode = exports.parse = __webpack_require__(217);
-	exports.encode = exports.stringify = __webpack_require__(218);
+	exports.decode = exports.parse = __webpack_require__(210);
+	exports.encode = exports.stringify = __webpack_require__(211);
 
 
 /***/ }),
-/* 217 */
+/* 210 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -31138,7 +31003,7 @@
 
 
 /***/ }),
-/* 218 */
+/* 211 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -31208,20 +31073,20 @@
 
 
 /***/ }),
-/* 219 */
+/* 212 */
 /***/ (function(module, exports) {
 
 
 
 /***/ }),
-/* 220 */
+/* 213 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(221)
-	var IncomingMessage = __webpack_require__(224)
-	var extend = __webpack_require__(246)
-	var statusCodes = __webpack_require__(247)
-	var url = __webpack_require__(213)
+	/* WEBPACK VAR INJECTION */(function(global) {var ClientRequest = __webpack_require__(214)
+	var IncomingMessage = __webpack_require__(217)
+	var extend = __webpack_require__(239)
+	var statusCodes = __webpack_require__(240)
+	var url = __webpack_require__(206)
 	
 	var http = exports
 	
@@ -31303,14 +31168,14 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 221 */
+/* 214 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(222)
-	var inherits = __webpack_require__(223)
-	var response = __webpack_require__(224)
-	var stream = __webpack_require__(225)
-	var toArrayBuffer = __webpack_require__(245)
+	/* WEBPACK VAR INJECTION */(function(Buffer, global, process) {var capability = __webpack_require__(215)
+	var inherits = __webpack_require__(216)
+	var response = __webpack_require__(217)
+	var stream = __webpack_require__(218)
+	var toArrayBuffer = __webpack_require__(238)
 	
 	var IncomingMessage = response.IncomingMessage
 	var rStates = response.readyStates
@@ -31630,10 +31495,10 @@
 		'via'
 	]
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer, (function() { return this; }()), __webpack_require__(3)))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(202).Buffer, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 222 */
+/* 215 */
 /***/ (function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {exports.fetch = isFunction(global.fetch) && isFunction(global.ReadableStream)
@@ -31713,7 +31578,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 223 */
+/* 216 */
 /***/ (function(module, exports) {
 
 	if (typeof Object.create === 'function') {
@@ -31742,12 +31607,12 @@
 
 
 /***/ }),
-/* 224 */
+/* 217 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(222)
-	var inherits = __webpack_require__(223)
-	var stream = __webpack_require__(225)
+	/* WEBPACK VAR INJECTION */(function(process, Buffer, global) {var capability = __webpack_require__(215)
+	var inherits = __webpack_require__(216)
+	var stream = __webpack_require__(218)
 	
 	var rStates = exports.readyStates = {
 		UNSENT: 0,
@@ -31963,23 +31828,23 @@
 		}
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(209).Buffer, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(202).Buffer, (function() { return this; }())))
 
 /***/ }),
-/* 225 */
+/* 218 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	exports = module.exports = __webpack_require__(226);
+	exports = module.exports = __webpack_require__(219);
 	exports.Stream = exports;
 	exports.Readable = exports;
-	exports.Writable = __webpack_require__(238);
-	exports.Duplex = __webpack_require__(237);
-	exports.Transform = __webpack_require__(243);
-	exports.PassThrough = __webpack_require__(244);
+	exports.Writable = __webpack_require__(231);
+	exports.Duplex = __webpack_require__(230);
+	exports.Transform = __webpack_require__(236);
+	exports.PassThrough = __webpack_require__(237);
 
 
 /***/ }),
-/* 226 */
+/* 219 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {// Copyright Joyent, Inc. and other Node contributors.
@@ -32007,13 +31872,13 @@
 	
 	/*<replacement>*/
 	
-	var processNextTick = __webpack_require__(227).nextTick;
+	var processNextTick = __webpack_require__(220).nextTick;
 	/*</replacement>*/
 	
 	module.exports = Readable;
 	
 	/*<replacement>*/
-	var isArray = __webpack_require__(228);
+	var isArray = __webpack_require__(221);
 	/*</replacement>*/
 	
 	/*<replacement>*/
@@ -32023,7 +31888,7 @@
 	Readable.ReadableState = ReadableState;
 	
 	/*<replacement>*/
-	var EE = __webpack_require__(229).EventEmitter;
+	var EE = __webpack_require__(222).EventEmitter;
 	
 	var EElistenerCount = function (emitter, type) {
 	  return emitter.listeners(type).length;
@@ -32031,12 +31896,12 @@
 	/*</replacement>*/
 	
 	/*<replacement>*/
-	var Stream = __webpack_require__(230);
+	var Stream = __webpack_require__(223);
 	/*</replacement>*/
 	
 	/*<replacement>*/
 	
-	var Buffer = __webpack_require__(231).Buffer;
+	var Buffer = __webpack_require__(224).Buffer;
 	var OurUint8Array = global.Uint8Array || function () {};
 	function _uint8ArrayToBuffer(chunk) {
 	  return Buffer.from(chunk);
@@ -32048,12 +31913,12 @@
 	/*</replacement>*/
 	
 	/*<replacement>*/
-	var util = __webpack_require__(232);
-	util.inherits = __webpack_require__(223);
+	var util = __webpack_require__(225);
+	util.inherits = __webpack_require__(216);
 	/*</replacement>*/
 	
 	/*<replacement>*/
-	var debugUtil = __webpack_require__(233);
+	var debugUtil = __webpack_require__(226);
 	var debug = void 0;
 	if (debugUtil && debugUtil.debuglog) {
 	  debug = debugUtil.debuglog('stream');
@@ -32062,8 +31927,8 @@
 	}
 	/*</replacement>*/
 	
-	var BufferList = __webpack_require__(234);
-	var destroyImpl = __webpack_require__(236);
+	var BufferList = __webpack_require__(227);
+	var destroyImpl = __webpack_require__(229);
 	var StringDecoder;
 	
 	util.inherits(Readable, Stream);
@@ -32083,7 +31948,7 @@
 	}
 	
 	function ReadableState(options, stream) {
-	  Duplex = Duplex || __webpack_require__(237);
+	  Duplex = Duplex || __webpack_require__(230);
 	
 	  options = options || {};
 	
@@ -32153,14 +32018,14 @@
 	  this.decoder = null;
 	  this.encoding = null;
 	  if (options.encoding) {
-	    if (!StringDecoder) StringDecoder = __webpack_require__(242).StringDecoder;
+	    if (!StringDecoder) StringDecoder = __webpack_require__(235).StringDecoder;
 	    this.decoder = new StringDecoder(options.encoding);
 	    this.encoding = options.encoding;
 	  }
 	}
 	
 	function Readable(options) {
-	  Duplex = Duplex || __webpack_require__(237);
+	  Duplex = Duplex || __webpack_require__(230);
 	
 	  if (!(this instanceof Readable)) return new Readable(options);
 	
@@ -32309,7 +32174,7 @@
 	
 	// backwards compatibility.
 	Readable.prototype.setEncoding = function (enc) {
-	  if (!StringDecoder) StringDecoder = __webpack_require__(242).StringDecoder;
+	  if (!StringDecoder) StringDecoder = __webpack_require__(235).StringDecoder;
 	  this._readableState.decoder = new StringDecoder(enc);
 	  this._readableState.encoding = enc;
 	  return this;
@@ -33000,7 +32865,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 227 */
+/* 220 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process) {'use strict';
@@ -33051,7 +32916,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3)))
 
 /***/ }),
-/* 228 */
+/* 221 */
 /***/ (function(module, exports) {
 
 	var toString = {}.toString;
@@ -33062,7 +32927,7 @@
 
 
 /***/ }),
-/* 229 */
+/* 222 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -33370,18 +33235,18 @@
 
 
 /***/ }),
-/* 230 */
+/* 223 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	module.exports = __webpack_require__(229).EventEmitter;
+	module.exports = __webpack_require__(222).EventEmitter;
 
 
 /***/ }),
-/* 231 */
+/* 224 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* eslint-disable node/no-deprecated-api */
-	var buffer = __webpack_require__(209)
+	var buffer = __webpack_require__(202)
 	var Buffer = buffer.Buffer
 	
 	// alternative to using Object.keys for old browsers
@@ -33445,7 +33310,7 @@
 
 
 /***/ }),
-/* 232 */
+/* 225 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(Buffer) {// Copyright Joyent, Inc. and other Node contributors.
@@ -33556,24 +33421,24 @@
 	  return Object.prototype.toString.call(o);
 	}
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(209).Buffer))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(202).Buffer))
 
 /***/ }),
-/* 233 */
+/* 226 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 234 */
+/* 227 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 	
-	var Buffer = __webpack_require__(231).Buffer;
-	var util = __webpack_require__(235);
+	var Buffer = __webpack_require__(224).Buffer;
+	var util = __webpack_require__(228);
 	
 	function copyBuffer(src, target, offset) {
 	  src.copy(target, offset);
@@ -33649,20 +33514,20 @@
 	}
 
 /***/ }),
-/* 235 */
+/* 228 */
 /***/ (function(module, exports) {
 
 	/* (ignored) */
 
 /***/ }),
-/* 236 */
+/* 229 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
 	/*<replacement>*/
 	
-	var processNextTick = __webpack_require__(227).nextTick;
+	var processNextTick = __webpack_require__(220).nextTick;
 	/*</replacement>*/
 	
 	// undocumented cb() API, needed for core, not for public API
@@ -33734,7 +33599,7 @@
 	};
 
 /***/ }),
-/* 237 */
+/* 230 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -33767,7 +33632,7 @@
 	
 	/*<replacement>*/
 	
-	var processNextTick = __webpack_require__(227).nextTick;
+	var processNextTick = __webpack_require__(220).nextTick;
 	/*</replacement>*/
 	
 	/*<replacement>*/
@@ -33782,12 +33647,12 @@
 	module.exports = Duplex;
 	
 	/*<replacement>*/
-	var util = __webpack_require__(232);
-	util.inherits = __webpack_require__(223);
+	var util = __webpack_require__(225);
+	util.inherits = __webpack_require__(216);
 	/*</replacement>*/
 	
-	var Readable = __webpack_require__(226);
-	var Writable = __webpack_require__(238);
+	var Readable = __webpack_require__(219);
+	var Writable = __webpack_require__(231);
 	
 	util.inherits(Duplex, Readable);
 	
@@ -33863,7 +33728,7 @@
 	}
 
 /***/ }),
-/* 238 */
+/* 231 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, setImmediate, global) {// Copyright Joyent, Inc. and other Node contributors.
@@ -33895,7 +33760,7 @@
 	
 	/*<replacement>*/
 	
-	var processNextTick = __webpack_require__(227).nextTick;
+	var processNextTick = __webpack_require__(220).nextTick;
 	/*</replacement>*/
 	
 	module.exports = Writable;
@@ -33932,23 +33797,23 @@
 	Writable.WritableState = WritableState;
 	
 	/*<replacement>*/
-	var util = __webpack_require__(232);
-	util.inherits = __webpack_require__(223);
+	var util = __webpack_require__(225);
+	util.inherits = __webpack_require__(216);
 	/*</replacement>*/
 	
 	/*<replacement>*/
 	var internalUtil = {
-	  deprecate: __webpack_require__(241)
+	  deprecate: __webpack_require__(234)
 	};
 	/*</replacement>*/
 	
 	/*<replacement>*/
-	var Stream = __webpack_require__(230);
+	var Stream = __webpack_require__(223);
 	/*</replacement>*/
 	
 	/*<replacement>*/
 	
-	var Buffer = __webpack_require__(231).Buffer;
+	var Buffer = __webpack_require__(224).Buffer;
 	var OurUint8Array = global.Uint8Array || function () {};
 	function _uint8ArrayToBuffer(chunk) {
 	  return Buffer.from(chunk);
@@ -33959,14 +33824,14 @@
 	
 	/*</replacement>*/
 	
-	var destroyImpl = __webpack_require__(236);
+	var destroyImpl = __webpack_require__(229);
 	
 	util.inherits(Writable, Stream);
 	
 	function nop() {}
 	
 	function WritableState(options, stream) {
-	  Duplex = Duplex || __webpack_require__(237);
+	  Duplex = Duplex || __webpack_require__(230);
 	
 	  options = options || {};
 	
@@ -34116,7 +33981,7 @@
 	}
 	
 	function Writable(options) {
-	  Duplex = Duplex || __webpack_require__(237);
+	  Duplex = Duplex || __webpack_require__(230);
 	
 	  // Writable ctor is applied to Duplexes, too.
 	  // `realHasInstance` is necessary because using plain `instanceof`
@@ -34543,10 +34408,10 @@
 	  this.end();
 	  cb(err);
 	};
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(239).setImmediate, (function() { return this; }())))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(3), __webpack_require__(232).setImmediate, (function() { return this; }())))
 
 /***/ }),
-/* 239 */
+/* 232 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {var apply = Function.prototype.apply;
@@ -34599,7 +34464,7 @@
 	};
 	
 	// setimmediate attaches itself to the global object
-	__webpack_require__(240);
+	__webpack_require__(233);
 	// On some exotic environments, it's not clear which object `setimmeidate` was
 	// able to install onto.  Search each possibility in the same order as the
 	// `setimmediate` library.
@@ -34613,7 +34478,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 240 */
+/* 233 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(global, process) {(function (global, undefined) {
@@ -34806,7 +34671,7 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }()), __webpack_require__(3)))
 
 /***/ }),
-/* 241 */
+/* 234 */
 /***/ (function(module, exports) {
 
 	/* WEBPACK VAR INJECTION */(function(global) {
@@ -34880,12 +34745,12 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, (function() { return this; }())))
 
 /***/ }),
-/* 242 */
+/* 235 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 	
-	var Buffer = __webpack_require__(231).Buffer;
+	var Buffer = __webpack_require__(224).Buffer;
 	
 	var isEncoding = Buffer.isEncoding || function (encoding) {
 	  encoding = '' + encoding;
@@ -35157,7 +35022,7 @@
 	}
 
 /***/ }),
-/* 243 */
+/* 236 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -35227,11 +35092,11 @@
 	
 	module.exports = Transform;
 	
-	var Duplex = __webpack_require__(237);
+	var Duplex = __webpack_require__(230);
 	
 	/*<replacement>*/
-	var util = __webpack_require__(232);
-	util.inherits = __webpack_require__(223);
+	var util = __webpack_require__(225);
+	util.inherits = __webpack_require__(216);
 	/*</replacement>*/
 	
 	util.inherits(Transform, Duplex);
@@ -35376,7 +35241,7 @@
 	}
 
 /***/ }),
-/* 244 */
+/* 237 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -35408,11 +35273,11 @@
 	
 	module.exports = PassThrough;
 	
-	var Transform = __webpack_require__(243);
+	var Transform = __webpack_require__(236);
 	
 	/*<replacement>*/
-	var util = __webpack_require__(232);
-	util.inherits = __webpack_require__(223);
+	var util = __webpack_require__(225);
+	util.inherits = __webpack_require__(216);
 	/*</replacement>*/
 	
 	util.inherits(PassThrough, Transform);
@@ -35428,10 +35293,10 @@
 	};
 
 /***/ }),
-/* 245 */
+/* 238 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var Buffer = __webpack_require__(209).Buffer
+	var Buffer = __webpack_require__(202).Buffer
 	
 	module.exports = function (buf) {
 		// If the buffer is backed by a Uint8Array, a faster version will work
@@ -35461,7 +35326,7 @@
 
 
 /***/ }),
-/* 246 */
+/* 239 */
 /***/ (function(module, exports) {
 
 	module.exports = extend
@@ -35486,7 +35351,7 @@
 
 
 /***/ }),
-/* 247 */
+/* 240 */
 /***/ (function(module, exports) {
 
 	module.exports = {
@@ -35556,10 +35421,10 @@
 
 
 /***/ }),
-/* 248 */
+/* 241 */
 /***/ (function(module, exports, __webpack_require__) {
 
-	var http = __webpack_require__(220);
+	var http = __webpack_require__(213);
 	
 	var https = module.exports;
 	
@@ -35576,12 +35441,12 @@
 
 
 /***/ }),
-/* 249 */
+/* 242 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-scale/ Version 1.0.7. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(184), __webpack_require__(197), __webpack_require__(190), __webpack_require__(201), __webpack_require__(250), __webpack_require__(251), __webpack_require__(191)) :
+		 true ? factory(exports, __webpack_require__(177), __webpack_require__(190), __webpack_require__(183), __webpack_require__(194), __webpack_require__(243), __webpack_require__(244), __webpack_require__(184)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-array', 'd3-collection', 'd3-interpolate', 'd3-format', 'd3-time', 'd3-time-format', 'd3-color'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3,global.d3,global.d3,global.d3,global.d3,global.d3));
 	}(this, (function (exports,d3Array,d3Collection,d3Interpolate,d3Format,d3Time,d3TimeFormat,d3Color) { 'use strict';
@@ -36507,7 +36372,7 @@
 
 
 /***/ }),
-/* 250 */
+/* 243 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-time/ Version 1.0.8. Copyright 2017 Mike Bostock.
@@ -36898,12 +36763,12 @@
 
 
 /***/ }),
-/* 251 */
+/* 244 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-time-format/ Version 2.1.1. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(250)) :
+		 true ? factory(exports, __webpack_require__(243)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-time'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3));
 	}(this, (function (exports,d3Time) { 'use strict';
@@ -37592,12 +37457,12 @@
 
 
 /***/ }),
-/* 252 */
+/* 245 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-shape/ Version 1.2.0. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(196)) :
+		 true ? factory(exports, __webpack_require__(189)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-path'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3));
 	}(this, (function (exports,d3Path) { 'use strict';
@@ -39533,7 +39398,7 @@
 
 
 /***/ }),
-/* 253 */
+/* 246 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-voronoi/ Version 1.1.2. Copyright 2017 Mike Bostock.
@@ -40538,12 +40403,12 @@
 
 
 /***/ }),
-/* 254 */
+/* 247 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// https://d3js.org/d3-zoom/ Version 1.7.1. Copyright 2017 Mike Bostock.
 	(function (global, factory) {
-		 true ? factory(exports, __webpack_require__(187), __webpack_require__(188), __webpack_require__(190), __webpack_require__(189), __webpack_require__(192)) :
+		 true ? factory(exports, __webpack_require__(180), __webpack_require__(181), __webpack_require__(183), __webpack_require__(182), __webpack_require__(185)) :
 		typeof define === 'function' && define.amd ? define(['exports', 'd3-dispatch', 'd3-drag', 'd3-interpolate', 'd3-selection', 'd3-transition'], factory) :
 		(factory((global.d3 = global.d3 || {}),global.d3,global.d3,global.d3,global.d3,global.d3));
 	}(this, (function (exports,d3Dispatch,d3Drag,d3Interpolate,d3Selection,d3Transition) { 'use strict';
@@ -41046,7 +40911,7 @@
 
 
 /***/ }),
-/* 255 */
+/* 248 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	var __WEBPACK_AMD_DEFINE_ARRAY__, __WEBPACK_AMD_DEFINE_RESULT__;/* WEBPACK VAR INJECTION */(function(module) {
@@ -43808,13 +43673,13 @@
 	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(34)(module)))
 
 /***/ }),
-/* 256 */
+/* 249 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	// style-loader: Adds some css to the DOM by adding a <style> tag
 	
 	// load the styles
-	var content = __webpack_require__(257);
+	var content = __webpack_require__(250);
 	if(typeof content === 'string') content = [[module.id, content, '']];
 	// add the styles to the DOM
 	var update = __webpack_require__(172)(content, {});
@@ -43834,7 +43699,7 @@
 	}
 
 /***/ }),
-/* 257 */
+/* 250 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(171)();
@@ -43846,6 +43711,911 @@
 	
 	// exports
 
+
+/***/ }),
+/* 251 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _header = __webpack_require__(168);
+	
+	var _header2 = _interopRequireDefault(_header);
+	
+	var _MeasureListContainer = __webpack_require__(252);
+	
+	var _MeasureListContainer2 = _interopRequireDefault(_MeasureListContainer);
+	
+	var _MeasureSearchContainer = __webpack_require__(258);
+	
+	var _MeasureSearchContainer2 = _interopRequireDefault(_MeasureSearchContainer);
+	
+	var _MeasureYearsContainer = __webpack_require__(260);
+	
+	var _MeasureYearsContainer2 = _interopRequireDefault(_MeasureYearsContainer);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var MeasureList = function (_Component) {
+	  _inherits(MeasureList, _Component);
+	
+	  function MeasureList() {
+	    _classCallCheck(this, MeasureList);
+	
+	    return _possibleConstructorReturn(this, (MeasureList.__proto__ || Object.getPrototypeOf(MeasureList)).apply(this, arguments));
+	  }
+	
+	  _createClass(MeasureList, [{
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'container' },
+	        _react2.default.createElement(_header2.default, null),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'row' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-md-offset-1 col-md-2' },
+	            _react2.default.createElement(_MeasureYearsContainer2.default, null)
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-md-8' },
+	            _react2.default.createElement(_MeasureSearchContainer2.default, null),
+	            _react2.default.createElement(_MeasureListContainer2.default, null)
+	          )
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return MeasureList;
+	}(_react.Component);
+	
+	exports.default = MeasureList;
+
+/***/ }),
+/* 252 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _reactRedux = __webpack_require__(14);
+	
+	var _measure_list = __webpack_require__(131);
+	
+	var _MeasureList = __webpack_require__(253);
+	
+	var _MeasureList2 = _interopRequireDefault(_MeasureList);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var mapStateToProps = function mapStateToProps(state) {
+	  return {
+	    measures: state.measureList.measures,
+	    filters: state.measureList.filters
+	  };
+	};
+	
+	var mapDispatchToProps = function mapDispatchToProps(dispatch, ownProps) {
+	  return {
+	    fetchMeasures: function fetchMeasures(filters) {
+	      dispatch((0, _measure_list.fetchMeasures)(filters)).then(function (response) {
+	        !response.error ? dispatch((0, _measure_list.fetchMeasuresSuccess)(response.payload.data)) : dispatch((0, _measure_list.fetchMeasuresFailure)(response.payload.data));
+	      });
+	    },
+	    resetMeasures: function resetMeasures() {
+	      dispatch((0, _measure_list.resetMeasures)());
+	    },
+	    resetFilters: function resetFilters() {
+	      dispatch((0, _measure_list.resetFilters)());
+	    }
+	  };
+	};
+	
+	exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(_MeasureList2.default);
+
+/***/ }),
+/* 253 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRouterDom = __webpack_require__(43);
+	
+	__webpack_require__(254);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var MeasureList = function (_Component) {
+	  _inherits(MeasureList, _Component);
+	
+	  function MeasureList() {
+	    _classCallCheck(this, MeasureList);
+	
+	    return _possibleConstructorReturn(this, (MeasureList.__proto__ || Object.getPrototypeOf(MeasureList)).apply(this, arguments));
+	  }
+	
+	  _createClass(MeasureList, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      console.log(this.props.filters);
+	      this.props.fetchMeasures(this.props.filters);
+	    }
+	  }, {
+	    key: 'componentWillUnmount',
+	    value: function componentWillUnmount() {
+	      this.props.resetMeasures();
+	      this.props.resetFilters();
+	    }
+	  }, {
+	    key: 'renderMeasures',
+	    value: function renderMeasures(measures) {
+	
+	      return measures.map(function (meas) {
+	        var passed = _react2.default.createElement(
+	          'div',
+	          { className: 'text-danger' },
+	          _react2.default.createElement(
+	            'div',
+	            { style: 'font-size: 2em' },
+	            _react2.default.createElement('span', { className: 'glyphicon glyphicon-remove' })
+	          ),
+	          _react2.default.createElement(
+	            'strong',
+	            null,
+	            'Not Passed'
+	          )
+	        );
+	
+	        if (meas.passed) {
+	          passed = _react2.default.createElement(
+	            'div',
+	            { className: 'text-success' },
+	            _react2.default.createElement(
+	              'div',
+	              { style: 'font-size: 2em' },
+	              _react2.default.createElement('span', { className: 'glyphicon glyphicon-ok' })
+	            ),
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              'Passed'
+	            )
+	          );
+	        }
+	
+	        return _react2.default.createElement(
+	          'div',
+	          null,
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'measure-list-item row', key: meas.id },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'measure-number col-md-2' },
+	              _react2.default.createElement(
+	                _reactRouterDom.Link,
+	                { to: '/measure/' + meas.year + '/' + meas.number },
+	                meas.number
+	              )
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'measure-description col-md-9' },
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'row' },
+	                _react2.default.createElement(
+	                  'div',
+	                  { className: 'col-sm-11' },
+	                  meas.description
+	                ),
+	                _react2.default.createElement(
+	                  'div',
+	                  { className: 'col-sm-1' },
+	                  passed
+	                )
+	              )
+	            )
+	          ),
+	          _react2.default.createElement('hr', { className: 'measure-list-item-sep' })
+	        );
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var _props$measures = this.props.measures,
+	          list = _props$measures.list,
+	          loading = _props$measures.loading,
+	          error = _props$measures.error;
+	
+	      var html = '';
+	
+	      if (loading) {
+	        html = _react2.default.createElement(
+	          'div',
+	          { className: 'container' },
+	          _react2.default.createElement(
+	            'h3',
+	            null,
+	            'Loading...'
+	          )
+	        );
+	      } else if (error) {
+	        html = _react2.default.createElement(
+	          'div',
+	          { className: 'alert alert-danger' },
+	          'Error: ',
+	          error.message
+	        );
+	      } else {
+	        html = _react2.default.createElement(
+	          'ul',
+	          { className: 'list-group' },
+	          ' ',
+	          this.renderMeasures(list),
+	          ' '
+	        );
+	      }
+	
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'row' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-md-offset-1 col-sm-11' },
+	          html
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return MeasureList;
+	}(_react.Component);
+	
+	exports.default = MeasureList;
+
+/***/ }),
+/* 254 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(255);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(172)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!../../../node_modules/css-loader/index.js!./measure.css", function() {
+				var newContent = require("!!../../../node_modules/css-loader/index.js!./measure.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ }),
+/* 255 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(171)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, ".measure-list-item {\n  padding: 10px;\n  margin-top: 0px;\n}\n\n.measure-list-item .measure-number {\n  font-size: 2.5em;\n  font-family: 'Merriweather', serif;\n  margin-right: -5px;\n}\n\n.measure-list-item .measure-number a:hover, \n.measure-list-item .measure-number a:active, \n.measure-list-item .measure-number a:focus { \n  color: green;\n  text-decoration: none;\n}\n\n.measure-list-item .measure-description {\n  border-left: solid 1px #ddd;\n  padding: 15px;\n}\n\n.measure-list-item a {\n  font-size: 1.25em;\n}\n\nhr.measure-list-item-sep {\n  margin-top: 5px;\n  margin-bottom: 5px;\n  border: none;\n  border-bottom: solid 1px #ddd;\n}\n\n.measure-list-item-year {\n  font-size: 2em;\n  font-family: 'Merriweather', serif;\n  border-bottom: 1px solid #DDD;\n  margin-bottom: 5px;\n  padding-bottom: 10px;\n}\n.measure-list-item.active {\n  background-color: #EEE;\n}\n\n.measure-list-item.active .measure-number {\n  color: #337ab7;\n  font-weight: bold;\n  font-size: 3em;\n  font-family: 'Merriweather', serif;\n}\n\n.cat-tag {\n  display: inline-block;\n  cursor: pointer;\n  padding: 3px 7px;\n  margin: 3px;\n  border: solid 1px #DDD;\n  border-radius: 5px 5px;\n}\n\n.cat-tag:hover {\n  background-color: #DDD;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ }),
+/* 256 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	// style-loader: Adds some css to the DOM by adding a <style> tag
+	
+	// load the styles
+	var content = __webpack_require__(257);
+	if(typeof content === 'string') content = [[module.id, content, '']];
+	// add the styles to the DOM
+	var update = __webpack_require__(172)(content, {});
+	if(content.locals) module.exports = content.locals;
+	// Hot Module Replacement
+	if(false) {
+		// When the styles change, update the <style> tags
+		if(!content.locals) {
+			module.hot.accept("!!../node_modules/css-loader/index.js!./app.css", function() {
+				var newContent = require("!!../node_modules/css-loader/index.js!./app.css");
+				if(typeof newContent === 'string') newContent = [[module.id, newContent, '']];
+				update(newContent);
+			});
+		}
+		// When the module is disposed, remove the <style> tags
+		module.hot.dispose(function() { update(); });
+	}
+
+/***/ }),
+/* 257 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	exports = module.exports = __webpack_require__(171)();
+	// imports
+	
+	
+	// module
+	exports.push([module.id, "a {\n  color: green;\n}\n\na:hover, a:active, a:focus {\n  color: darkgreen;\n}\n\n\n.form-control {\n  border-radius: 0px;\n  color: black;\n}\n\n.input-mdlg {\n  font-size: 1.1em;\n}\n\n.site-header a:hover, .site-header a:active, .site-header a:focus {\n  color: green;\n  text-decoration: none;\n}\n\n.site-header .site-title {\n  padding-top: 10px;\n  font-size: 1.5em;\n  font-family: 'Merriweather', serif;\n}\n\n.site-header .site-menu {\n  font-size: 1.1em;\n  padding-top: 20px;\n}\n\n.site-header .site-menu .site-menu-link {\n  display: inline-block;\n  margin-left: 10px;\n  padding-left: 10px;\n  border-left: solid 1px #AAA;\n}\n\n.site-header .site-menu .site-menu-link:first-child {\n  border-left: none;\n}\n\n.map-title {\n  font-size: 1.75em;\n  font-family: 'Merriweather', serif;\n}\n\n.map-container {\n  position: relative;\n}\n\n.map-container .search {\n  position: absolute;\n  top: 0px;\n  right: 15px;\n  z-index: 9998;\n  font-family: 'Merriweather', serif;\n}\n\n.map-container .search .glyphicon.glyphicon-search, \n.map-container .search .search-text {\n  font-size: 1.5em;\n}\n.measure-year {\n  font-size: 1.75em;\n  font-family: 'Merriweather', serif;\n}\n", ""]);
+	
+	// exports
+
+
+/***/ }),
+/* 258 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _reactRedux = __webpack_require__(14);
+	
+	var _measure_list = __webpack_require__(131);
+	
+	var _MeasureSearch = __webpack_require__(259);
+	
+	var _MeasureSearch2 = _interopRequireDefault(_MeasureSearch);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	var mapStateToProps = function mapStateToProps(state) {
+	  return {
+	    measures: state.measureList.measures,
+	    filters: state.measureList.filters
+	  };
+	};
+	
+	var mapDispatchToProps = function mapDispatchToProps(dispatch) {
+	  return {
+	    fetchMeasures: function fetchMeasures(filters) {
+	      dispatch((0, _measure_list.fetchMeasures)(filters)).then(function (response) {
+	        !response.error ? dispatch((0, _measure_list.fetchMeasuresSuccess)(response.payload.data)) : dispatch((0, _measure_list.fetchMeasuresFailure)(response.payload.data));
+	      });
+	    },
+	    setFilters: function setFilters(filters) {
+	      dispatch((0, _measure_list.setFilters)(filters));
+	    },
+	    resetMeasures: function resetMeasures() {
+	      dispatch((0, _measure_list.resetMeasures)());
+	    }
+	  };
+	};
+	
+	exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(_MeasureSearch2.default);
+
+/***/ }),
+/* 259 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	/**
+	 * Component that displays a search bar for searching through
+	 * measures
+	 */
+	var MeasureSearch = function (_Component) {
+	  _inherits(MeasureSearch, _Component);
+	
+	  function MeasureSearch() {
+	    _classCallCheck(this, MeasureSearch);
+	
+	    var _this = _possibleConstructorReturn(this, (MeasureSearch.__proto__ || Object.getPrototypeOf(MeasureSearch)).call(this));
+	
+	    _this.state = {
+	      'searchTimeout': 0
+	    };
+	    return _this;
+	  }
+	
+	  _createClass(MeasureSearch, [{
+	    key: 'search',
+	    value: function search() {
+	      this.props.resetMeasures();
+	      this.props.fetchMeasures(this.props.filters);
+	    }
+	  }, {
+	    key: 'searchKeyUp',
+	    value: function searchKeyUp(e) {
+	      this.props.setFilters({ 'search': e.target.value });
+	
+	      if (e.charCode === 13 || e.keyCode === 13) {
+	        this.search();
+	      }
+	    }
+	
+	    /**
+	     * Render search bar
+	     */
+	
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      if (this.props.measures.loading) {
+	        var loading_text = 'Loading...';
+	      } else {
+	        var loading_text = '';
+	      }
+	
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement('br', null),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-md-offset-1 col-md-10' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'input-group' },
+	            _react2.default.createElement('input', { className: 'form-control input-mdlg', placeholder: 'Search...',
+	              onKeyUp: this.searchKeyUp.bind(this), value: this.props.filters.search }),
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'input-group-btn' },
+	              _react2.default.createElement(
+	                'button',
+	                { className: 'btn btn-primary', onClick: this.search.bind(this) },
+	                _react2.default.createElement('span', { className: 'glyphicon glyphicon-search' })
+	              )
+	            )
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-md-2' },
+	          loading_text
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return MeasureSearch;
+	}(_react.Component);
+	
+	exports.default = MeasureSearch;
+
+/***/ }),
+/* 260 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _reactRedux = __webpack_require__(14);
+	
+	var _measure_list = __webpack_require__(131);
+	
+	var _measure = __webpack_require__(261);
+	
+	var mapStateToProps = function mapStateToProps(state) {
+	  return {
+	    years: state.measureList.years,
+	    filters: state.measureList.filters
+	  };
+	};
+	
+	var mapDispatchToProps = function mapDispatchToProps(dispatch, ownProps) {
+	  return {
+	    fetchMeasureYears: function fetchMeasureYears() {
+	      dispatch((0, _measure_list.fetchMeasureYears)()).then(function (response) {
+	        !response.error ? dispatch((0, _measure_list.fetchMeasureYearsSuccess)(response.payload.data)) : dispatch((0, _measure_list.fetchMeasureYearsFailure)(response.payload.data));
+	      });
+	    },
+	    fetchMeasures: function fetchMeasures(filters) {
+	      dispatch((0, _measure_list.fetchMeasures)(filters)).then(function (response) {
+	        !response.error ? dispatch((0, _measure_list.fetchMeasuresSuccess)(response.payload.data)) : dispatch((0, _measure_list.fetchMeasuresFailure)(response.payload.data));
+	      });
+	    },
+	    setFilters: function setFilters(filters) {
+	      dispatch((0, _measure_list.setFilters)(filters));
+	    }
+	  };
+	};
+	
+	exports.default = (0, _reactRedux.connect)(mapStateToProps, mapDispatchToProps)(_measure.MeasureCategoricalFilter);
+
+/***/ }),
+/* 261 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.MeasureCategoricalFilter = exports.MeasureList = undefined;
+	
+	var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(2);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _reactRouterDom = __webpack_require__(43);
+	
+	__webpack_require__(254);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	/*
+	 * Measure list with search functionailty. We keep the master copy of measures
+	 * in props.measures and the visible measures are stored in a state
+	 * variable called `visible_measures`
+	 */
+	var MeasureList = function (_React$Component) {
+	  _inherits(MeasureList, _React$Component);
+	
+	  function MeasureList(props) {
+	    _classCallCheck(this, MeasureList);
+	
+	    var _this = _possibleConstructorReturn(this, (MeasureList.__proto__ || Object.getPrototypeOf(MeasureList)).call(this, props));
+	
+	    _this.state = {
+	      visible_measures: _this.getVisibleMeasures(props.search_text, props.measures),
+	      search_text: props.search_text,
+	      style: {
+	        'display': 'block'
+	      },
+	      show_style: {
+	        'display': 'none'
+	      }
+	    };
+	
+	    _this.updateSearch = _this.updateSearch.bind(_this);
+	    return _this;
+	  }
+	
+	  /**
+	   * Provided a `measures` object with measures keyed by year
+	   * return all measures that match `search_text` string provided.
+	   *
+	   * Example of `measures`:
+	   *  {
+	   *    1996: [
+	   *      {description: 'Something...', measure: 1},
+	   *      ...
+	   *    ]
+	   *    ...
+	   *  }
+	   *
+	   * @param search_text string
+	   * @param measures object
+	   *
+	   * @return object
+	   */
+	
+	
+	  _createClass(MeasureList, [{
+	    key: 'getVisibleMeasures',
+	    value: function getVisibleMeasures(search_text, measures) {
+	      if (search_text != null || search_text != '') {
+	        var visible_measures = {};
+	
+	        for (var year in measures) {
+	          var year_measures = measures[year];
+	          var vis_year_measures = [];
+	
+	          for (var x = 0; x < year_measures.length; x++) {
+	            var meas = year_measures[x];
+	            var desc = meas.description.toLowerCase();
+	
+	            if (desc.search(search_text) > -1) {
+	              vis_year_measures.push(meas);
+	            }
+	          }
+	
+	          if (vis_year_measures.length > 0 && vis_year_measures != null) {
+	            visible_measures[year] = vis_year_measures;
+	          }
+	        }
+	
+	        return visible_measures;
+	      } else {
+	        return this.props.measures;
+	      }
+	    }
+	  }, {
+	    key: 'updateSearch',
+	    value: function updateSearch(e) {
+	      this.setState({
+	        search_text: e.target.value
+	      });
+	
+	      this.props.updateSearchText(e.target.value);
+	    }
+	  }, {
+	    key: 'componentWillReceiveProps',
+	    value: function componentWillReceiveProps(nextProps) {
+	      this.setState({
+	        visible_measures: this.getVisibleMeasures(nextProps.search_text.toLowerCase(), nextProps.measures)
+	      });
+	    }
+	
+	    /** 
+	     * Determines whether or not to include year in the current
+	     * list of measures to render.
+	     *
+	     * @param year number
+	     */
+	
+	  }, {
+	    key: 'isYearIncluded',
+	    value: function isYearIncluded(year) {
+	      var cur_years = this.props.categorical_filters['years'];
+	
+	      if (cur_years.indexOf(year) > -1) {
+	        return true;
+	      }
+	
+	      if (cur_years.length === 0) {
+	        return true;
+	      }
+	
+	      return false;
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var self = this;
+	      var years = Object.keys(this.state.visible_measures);
+	      var measures_by_year = this.state.visible_measures;
+	
+	      var grouped_item_list = years.map(function (year) {
+	        var include_year = self.isYearIncluded(year);
+	
+	        if (include_year) {
+	          var measures = measures_by_year[year];
+	          var measure_list = measures.map(function (meas) {
+	            return _react2.default.createElement(
+	              'div',
+	              null,
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'measure-list-item row', key: year + ' ' + meas.measure },
+	                _react2.default.createElement(
+	                  'div',
+	                  { className: 'measure-number col-md-2' },
+	                  _react2.default.createElement(
+	                    _reactRouterDom.Link,
+	                    { to: '/measure/' + year + '/' + meas.measure },
+	                    meas.measure
+	                  )
+	                ),
+	                _react2.default.createElement(
+	                  'div',
+	                  { className: 'measure-description col-md-9' },
+	                  meas.description
+	                )
+	              ),
+	              _react2.default.createElement('hr', { className: 'measure-list-item-sep' })
+	            );
+	          });
+	
+	          return _react2.default.createElement(
+	            'div',
+	            { key: year },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'measure-list-item-year' },
+	              year
+	            ),
+	            _react2.default.createElement(
+	              'div',
+	              null,
+	              measure_list
+	            )
+	          );
+	        }
+	      });
+	
+	      if (grouped_item_list.length === 0 && Object.keys(this.props.measures).length > 0) {
+	        grouped_item_list = _react2.default.createElement(
+	          'h4',
+	          null,
+	          'No Results'
+	        );
+	      }
+	
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'measure-list-container', style: this.state.style },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'row' },
+	            _react2.default.createElement(
+	              'div',
+	              { className: 'col-md-10 col-sm-12' },
+	              _react2.default.createElement('br', null),
+	              _react2.default.createElement('input', { type: 'text', value: this.state.search_text,
+	                onChange: this.updateSearch,
+	                className: 'form-control input-mdlg', placeholder: 'Search...'
+	              }),
+	              _react2.default.createElement('hr', null),
+	              _react2.default.createElement(
+	                'div',
+	                { className: 'measure-list' },
+	                grouped_item_list
+	              )
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return MeasureList;
+	}(_react2.default.Component);
+	
+	/**
+	 * Renders all categorical filters used (e.g. "year", "special election", etc.)
+	 */
+	
+	
+	var MeasureCategoricalFilter = function (_React$Component2) {
+	  _inherits(MeasureCategoricalFilter, _React$Component2);
+	
+	  function MeasureCategoricalFilter() {
+	    _classCallCheck(this, MeasureCategoricalFilter);
+	
+	    return _possibleConstructorReturn(this, (MeasureCategoricalFilter.__proto__ || Object.getPrototypeOf(MeasureCategoricalFilter)).call(this));
+	  }
+	
+	  _createClass(MeasureCategoricalFilter, [{
+	    key: 'componentWillMount',
+	    value: function componentWillMount() {
+	      console.log(this.props.years.list);
+	      if (this.props.years.list.length === 0) {
+	        this.props.fetchMeasureYears();
+	      }
+	    }
+	  }, {
+	    key: 'selectYear',
+	    value: function selectYear(e) {
+	      var value = e.target.getAttribute('data-value');
+	      var filters = { 'years': [Number(value)] };
+	
+	      filters = _extends({}, this.props.filters, filters);
+	
+	      this.props.setFilters(filters);
+	      this.props.fetchMeasures(filters);
+	    }
+	  }, {
+	    key: 'getYearsHtml',
+	    value: function getYearsHtml() {
+	      var self = this;
+	      var years = this.props.years.list;
+	
+	      return years.map(function (year) {
+	        var selected = self.props.filters.years.indexOf(year) > -1;
+	        var style = {};
+	
+	        if (selected) {
+	          style = {
+	            color: 'white',
+	            backgroundColor: 'green'
+	          };
+	        }
+	
+	        return _react2.default.createElement(
+	          'div',
+	          { key: year, style: style, 'data-value': year,
+	            className: 'cat-tag',
+	            onClick: self.selectYear.bind(self) },
+	          year
+	        );
+	      });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var years = this.getYearsHtml();
+	
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'h3',
+	          null,
+	          'Years'
+	        ),
+	        years
+	      );
+	    }
+	  }]);
+	
+	  return MeasureCategoricalFilter;
+	}(_react2.default.Component);
+	
+	exports.MeasureList = MeasureList;
+	exports.MeasureCategoricalFilter = MeasureCategoricalFilter;
 
 /***/ })
 /******/ ]);

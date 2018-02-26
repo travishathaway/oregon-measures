@@ -1,7 +1,8 @@
 import {connect} from 'react-redux';
 import {
     fetchMeasure, fetchMeasureSuccess, fetchMeasureFailure,
-    fetchOregonGeojson, fetchOregonGeojsonSuccess, fetchOregonGeojsonFailure
+    fetchOregonGeojson, fetchOregonGeojsonSuccess, fetchOregonGeojsonFailure,
+    resetActiveMeasure
 } from '../actions/measure_detail';
 import MeasureDetail from '../components/MeasureDetail';
 
@@ -37,6 +38,9 @@ const mapDispatchToProps = (dispatch) => {
           fetchOregonGeojsonFailure(response.payload.data)
         );
       });
+    },
+    resetActiveMeasure: () => {
+      dispatch(resetActiveMeasure());
     }
   }
 }

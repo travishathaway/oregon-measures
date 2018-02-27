@@ -107,7 +107,7 @@ def update_measure_results(measure_id: str, yes_votes: list,
     )
 
     data = [
-        (measure_id, yes, no, c['id'])
+        (measure_id, c['county_id'], yes, no)
         for yes, no, c in zip(yes_votes, no_votes, counties)
     ]
 
@@ -118,7 +118,7 @@ def update_measure_results(measure_id: str, yes_votes: list,
         data
     )
 
-    cursor.execute()
+    db.commit()
 
 
 class Measure:
@@ -167,6 +167,23 @@ class Measure:
                     (self.number, self.date, self.description,
                      self.measure_id)
                 )
+
+            db.commit()
+
+    def delete(self):
+        """
+        Delete measure from database
+        """
+        if self.measure_id:
+            db = get_measures_db()
+            cursor = db.cursor()
+
+            cursor.execute('DELETE FROM measure_by_county '
+                           'WHERE measure_id = %s',
+                           (self.measure_id, ))
+
+            cursor.execute('DELETE FROM measure WHERE id = %s',
+                           (self.measure_id, ))
 
             db.commit()
 

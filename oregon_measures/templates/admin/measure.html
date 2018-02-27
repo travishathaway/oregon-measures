@@ -5,12 +5,24 @@
 
 {% if measure.results %}
 <div class="pull-right">
-    <button id="edit-btn" class="btn btn-primary">Edit</button>
-</div>
-<div class="pull-right">
-    <button id="view-btn" class="btn btn-primary hidden">View</button>
+    <form action="{{delete_link}}" method="post" id="delete-form">
+        <a href="{{measure_link}}" class="btn btn-default">
+            View on Site
+        </a>
+        <button id="edit-btn" class="btn btn-primary" type="button">Edit</button>
+        <button id="view-btn" class="btn btn-primary hidden" type="button">View</button>
+        <input id="delete-btn" type="submit" value="Delete" class="btn btn-danger" />
+    </form>
 </div>
 {% endif %}
+
+<div class="display">
+    <b>Description:</b><br />
+    <p>{{measure.description}}</p>
+
+    <b>Election Date:</b><br />
+    <p>{{measure.date}}</p>
+</div>
 
 <form action="" method="POST">
     {{form.csrf_token}}
@@ -85,6 +97,15 @@ $(document).ready(function(){
         $('.display').show();
 
         editing = false;
+    });
+
+    $('#delete-btn').on('click', function(e){
+        e.preventDefault();
+        var r=confirm("Are you sure you want to delete?");
+
+        if (r === true) {
+            $('#delete-form').submit();
+        }
     });
 
 });

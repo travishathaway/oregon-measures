@@ -8,27 +8,22 @@
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.0.0-rc2/css/bootstrap.min.css">
-    <style>
-        body {
-            padding-top: 60px;
-            padding-bottom: 40px;
-        }
-    </style>
 
     <script src="//cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
     {% endblock %}
 </head>
 <body>
-<ul>
-    {% if current_user.is_authenticated %}
-    <li><a href="/logout">Logout</a></li>
-    {% else %}
-    <li><a href="/login">Login</a></li>
-    {% endif %}
-    <li><a href="/admin">Admin</a></li>
-    <li><a href="/admin/measure">Create Measure</a></li>
-</ul>
     <div class="container">
+        <ul class="nav nav-pills">
+            {% if current_user.is_authenticated %}
+            <li><a href="{{ url_for('admin.index') }}">Admin</a></li>
+            <li><a href="{{ url_for('public.index') }}">Public Site</a></li>
+            <li><a href="{{ url_for('admin.create_measure') }}">Create Measure</a></li>
+            <li><a href="{{ url_for('auth.logout') }}">Logout</a></li>
+            {% else %}
+            <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+            {% endif %}
+        </ul>
         {% with messages = get_flashed_messages() %}
           {% if messages %}
             <ul class=flashes>

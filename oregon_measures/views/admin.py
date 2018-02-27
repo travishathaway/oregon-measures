@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash
+    Blueprint, render_template, request, redirect, url_for, flash, abort
 )
 
 from flask_login import login_required
@@ -16,9 +16,19 @@ admin = Blueprint(
 )
 
 
+def parse_ints(*args):
+    """
+    Parse values in args as int
+    """
+    try:
+        return [int(x) for x in args]
+    except ValueError:
+        abort(404)
+
+
 @admin.route("/", methods=["GET"])
 @login_required
-def admin_index():
+def index():
     """
     Render the admin index
     """
@@ -52,14 +62,35 @@ def create_measure():
     return render_template('admin/create_measure.html', form=form)
 
 
+@admin.route("/measure/<year>/<number>/delete", methods=["POST"])
+@login_required
+def delete_measure(year, number):
+    """Delete a measure"""
+    year, number = parse_ints(year, number)
+    measure = Measure.find(year, number)
+
+    if measure:
+        measure.delete()
+        flash('Measure deleted')
+        return redirect('/admin')
+    else:
+        abort(404)
+
+
 @admin.route("/measure/<year>/<number>", methods=["GET", "POST"])
 @login_required
 def measure_detail(year, number):
     """
     Render the admin index
     """
+    year, number = parse_ints(year, number)
     measure = get_measure(year, number)
+
+    if not measure:
+        abort(404)
+
     counties = measure.get('results') or get_counties()
+
     measure_mod = Measure(
         number=measure.get('number'), description=measure.get('description'),
         date=measure.get('date'), measure_id=measure.get('id')
@@ -70,15 +101,26 @@ def measure_detail(year, number):
     if request.method == 'POST':
         if form.validate():
             measure_mod.update(**form.data)
-            update_measure_results(
-                measure_mod.measure_id, form.data['yes_votes'],
-                form.data['no_votes'], counties
-            )
+
+            yes_votes = [x or 0 for x in request.form.getlist('yes_votes')]
+            no_votes = [x or 0 for x in request.form.getlist('no_votes')]
+
+            if yes_votes and no_votes:
+                update_measure_results(
+                    measure_mod.measure_id, yes_votes, no_votes, counties
+                )
+
             flash('Measure results saved')
 
             return redirect(
                 url_for('admin.measure_detail', year=year, number=number)
             )
 
+    measure_link = url_for('public.measure_detail', measure=measure_mod.number,
+                           year=measure_mod.date.year)
+    delete_link = url_for('admin.delete_measure', number=measure_mod.number,
+                          year=measure_mod.date.year)
+
     return render_template('admin/measure.html', form=form,
+                           measure_link=measure_link, delete_link=delete_link,
                            measure=measure, counties=counties)

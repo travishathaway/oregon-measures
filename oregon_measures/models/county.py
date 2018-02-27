@@ -11,5 +11,5 @@ def get_counties() -> list:
     cursor.execute('SELECT id, name FROM county order by name')
 
     return [
-        {'id': r[0], 'name': r[1]} for r in cursor.fetchall()
+        {'county_id': r[0], 'name': r[1]} for r in cursor.fetchall()
     ]

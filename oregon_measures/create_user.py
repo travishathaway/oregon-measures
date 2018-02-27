@@ -1,5 +1,5 @@
 from oregon_measures.app import app
-from oregon_measures.models import User
+from oregon_measures.models.auth import User
 
 
 def main():

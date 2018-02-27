@@ -17,11 +17,10 @@ public = Blueprint(
 
 
 @public.route('/', methods=["GET"])
-def admin_index():
+def index():
     """
     Render the public site index
     """
-    print(os.getcwd())
     return render_template('index.html')
 
 

@@ -183,7 +183,6 @@ class MeasureCategoricalFilter extends React.Component {
   }
 
   componentWillMount() {
-    console.log(this.props.years.list);
     if (this.props.years.list.length === 0) {
       this.props.fetchMeasureYears();
     }

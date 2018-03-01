@@ -6,7 +6,6 @@ import './css/measure.css';
 
 class MeasureList extends Component {
   componentWillMount() {
-    console.log(this.props.filters);
     this.props.fetchMeasures(this.props.filters);
   }
 

@@ -2,3 +2,5 @@ flask
 flask-login
 flask-bcrypt
 Flask-WTF
+psycopg2
+gunicorn

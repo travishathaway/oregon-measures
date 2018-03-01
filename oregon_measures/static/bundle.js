@@ -43877,7 +43877,6 @@
 	  _createClass(MeasureList, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      console.log(this.props.filters);
 	      this.props.fetchMeasures(this.props.filters);
 	    }
 	  }, {
@@ -44551,7 +44550,6 @@
 	  _createClass(MeasureCategoricalFilter, [{
 	    key: 'componentWillMount',
 	    value: function componentWillMount() {
-	      console.log(this.props.years.list);
 	      if (this.props.years.list.length === 0) {
 	        this.props.fetchMeasureYears();
 	      }

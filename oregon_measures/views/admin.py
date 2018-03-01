@@ -16,12 +16,12 @@ admin = Blueprint(
 )
 
 
-def parse_ints(*args):
+def parse_int(arg):
     """
     Parse values in args as int
     """
     try:
-        return [int(x) for x in args]
+        return int(arg)
     except ValueError:
         abort(404)
 
@@ -66,7 +66,7 @@ def create_measure():
 @login_required
 def delete_measure(year, number):
     """Delete a measure"""
-    year, number = parse_ints(year, number)
+    year = parse_int(year)
     measure = Measure.find(year, number)
 
     if measure:
@@ -83,7 +83,7 @@ def measure_detail(year, number):
     """
     Render the admin index
     """
-    year, number = parse_ints(year, number)
+    year = parse_int(year)
     measure = get_measure(year, number)
 
     if not measure:
@@ -115,6 +115,8 @@ def measure_detail(year, number):
             return redirect(
                 url_for('admin.measure_detail', year=year, number=number)
             )
+
+        flash('Form errors')
 
     measure_link = url_for('public.measure_detail', measure=measure_mod.number,
                            year=measure_mod.date.year)

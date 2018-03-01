@@ -28,12 +28,13 @@ class User(UserMixin):
 
     def save(self):
         if self.username and self.password:
-            password = generate_password_hash(self.password)
+            password = generate_password_hash(self.password).decode('utf-8')
             db = get_db()
             cursor = db.cursor()
 
             cursor.execute(
-                'INSERT INTO users VALUES (?, ?)', (self.username, password)
+                'INSERT INTO users (username, password) VALUES (%s, %s)',
+                (self.username, password)
             )
 
             db.commit()
@@ -47,7 +48,7 @@ class User(UserMixin):
         cursor = db.cursor()
 
         cursor.execute(
-            'SELECT username, password from users WHERE username = ?',
+            'SELECT username, password from users WHERE username = %s',
             (username, )
         )
 

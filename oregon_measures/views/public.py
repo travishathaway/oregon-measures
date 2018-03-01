@@ -1,12 +1,9 @@
-import os
-
 from flask import (
     Blueprint, render_template, jsonify, abort, request
 )
-from flasgger import swag_from
 
 from oregon_measures import settings
-from oregon_measures.app import get_measures_db
+from oregon_measures.app import get_db
 from oregon_measures.models.measure import (
     get_measures, get_measure
 )
@@ -33,7 +30,6 @@ def measure_detail(year, measure):
 
 
 @public.route('/api/measure', methods=['GET'])
-@swag_from('docs/measure_list.yml')
 def measures():
     """
     Endpoint for searching measures
@@ -44,13 +40,12 @@ def measures():
 
 
 @public.route('/api/measure/<year>/<number>', methods=['GET'])
-@swag_from('docs/measure.yml')
 def measures_detail(year, number):
     """
     Endpoint for searching measures
     """
     try:
-        number, year = int(number), int(year)
+        year = int(year)
     except ValueError:
         return abort(400, 'Invalid input provided')
 
@@ -67,7 +62,7 @@ def measure_years():
     """
     Returns the years for which we have measures
     """
-    db = get_measures_db()
+    db = get_db()
     cursor = db.cursor()
 
     query = """

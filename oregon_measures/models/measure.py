@@ -1,5 +1,5 @@
 from datetime import datetime
-from oregon_measures.app import get_measures_db
+from oregon_measures.app import get_db
 
 
 def get_measures(filters: dict) -> list:
@@ -11,7 +11,7 @@ def get_measures(filters: dict) -> list:
     """
     params = []
     where_cls = []
-    db = get_measures_db()
+    db = get_db()
     cursor = db.cursor()
     search = filters.get('search')
     years = filters.get('years[]')
@@ -66,7 +66,7 @@ def get_measure(year: int, number: int) -> dict:
     """
     Get single measure
     """
-    db = get_measures_db()
+    db = get_db()
     cursor = db.cursor()
 
     cursor.execute("""
@@ -99,7 +99,7 @@ def get_measure(year: int, number: int) -> dict:
 def update_measure_results(measure_id: str, yes_votes: list,
                            no_votes: list, counties: list):
     """Bulk update measure results"""
-    db = get_measures_db()
+    db = get_db()
     cursor = db.cursor()
 
     cursor.execute(
@@ -150,7 +150,7 @@ class Measure:
 
     def save(self):
         if self.date and self.number and self.description:
-            db = get_measures_db()
+            db = get_db()
             cursor = db.cursor()
 
             if not self.measure_id:
@@ -175,7 +175,7 @@ class Measure:
         Delete measure from database
         """
         if self.measure_id:
-            db = get_measures_db()
+            db = get_db()
             cursor = db.cursor()
 
             cursor.execute('DELETE FROM measure_by_county '
@@ -192,7 +192,7 @@ class Measure:
         """
         Find measure by year and number
         """
-        db = get_measures_db()
+        db = get_db()
         cursor = db.cursor()
 
         cursor.execute(

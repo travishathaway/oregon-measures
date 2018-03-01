@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "c563951f515ea3ca307030a84880ad20cb7b0204f21dbee61365a7462b4d835c"
+            "sha256": "8f6a8c9e64604fcf6c82a272285a6a5fd937c5f177027c269ae7e4b4a8bee8f3"
         },
         "host-environment-markers": {
             "implementation_name": "cpython",
@@ -125,6 +125,13 @@
                 "sha256:5d14d55cfd35f613d99ee7cba0fc3fbbe63ba02f544d349158c14ca15561cc36"
             ],
             "version": "==0.14.2"
+        },
+        "gunicorn": {
+            "hashes": [
+                "sha256:75af03c99389535f218cc596c7de74df4763803f7b63eb09d77e92b3956b36c6",
+                "sha256:eee1169f0ca667be05db3351a0960765620dad53f53434262ff8901b68a1b622"
+            ],
+            "version": "==19.7.1"
         },
         "itsdangerous": {
             "hashes": [

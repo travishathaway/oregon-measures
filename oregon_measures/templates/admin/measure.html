@@ -14,6 +14,8 @@
         <input id="delete-btn" type="submit" value="Delete" class="btn btn-danger" />
     </form>
 </div>
+<br />
+<br />
 {% endif %}
 
 <div class="display">
@@ -37,7 +39,17 @@
             {{form.description.label}} {{form.description(class="form-control")}}
         </div>
     </div>
-    <table class="table">
+    <div class="pull-right edit hidden">
+        <button id="bulk-update-btn" type="button" class="btn btn-primary">
+            Bulk Update
+        </button>
+        <button id="regular-update-btn" type="button" class="btn btn-primary hidden">
+            Regular Update
+        </button>
+    </div>
+    <br />
+    <br />
+    <table id="measure-results" class="table">
         <tr>
             <th>County</th>
             <th>Yes Votes</th>
@@ -68,8 +80,28 @@
         </tr>
         {% endfor %}
     </table>
+    <div class="row hidden" id="results-bulk-update">
+        <div class="col-md-4">
+            <label for="">Yes Votes</label>
+            <p>
+                <i>Paste measure results here. Order alphabetically by county.</i>
+            </p>
+            <textarea class="form-control" name="yes_votes_bulk"
+                      rows="36" cols="20"></textarea>
+        </div>
+        <div class="col-md-offset-2 col-md-4">
+            <label for="">No Votes</label>
+            <p>
+                <i>Paste measure results here. Order alphabetically by county.</i>
+            </p>
+            <textarea class="form-control" name="no_votes_bulk"
+                      rows="36" cols="20"></textarea>
+        </div>
+    </div>
+    <hr class="hidden edit" />
     <div class="form-group">
-        <input type="submit" value="Save" class="btn btn-primary"/>
+        <input type="submit" value="Save"
+               class="btn btn-primary edit {%if measure.resutls%}hidden{%endif%}"/>
     </div>
 </form>
 {% endblock %}
@@ -106,6 +138,22 @@ $(document).ready(function(){
         if (r === true) {
             $('#delete-form').submit();
         }
+    });
+
+    $('#bulk-update-btn').on('click', function(e){
+        $('#bulk-update-btn').addClass('hidden');
+        $('#regular-update-btn').removeClass('hidden');
+
+        $('#measure-results').addClass('hidden');
+        $('#results-bulk-update').removeClass('hidden');
+    });
+
+    $('#regular-update-btn').on('click', function(e){
+        $('#bulk-update-btn').removeClass('hidden');
+        $('#regular-update-btn').addClass('hidden');
+
+        $('#measure-results').removeClass('hidden');
+        $('#results-bulk-update').addClass('hidden');
     });
 
 });

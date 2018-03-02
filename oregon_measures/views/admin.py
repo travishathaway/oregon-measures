@@ -9,6 +9,7 @@ from oregon_measures.models.measure import (
 )
 from oregon_measures.models.county import get_counties
 from oregon_measures.forms.admin import MeasureForm
+from oregon_measures.utils import parse_bulk_update_text
 
 admin = Blueprint(
     'admin', __name__, template_folder='templates',
@@ -52,7 +53,7 @@ def create_measure():
                 **{k: v for k, v in form.data.items() if k != 'csrf_token'}
             )
             form_mod.save()
-            flash('New Measure created')
+            flash('New Measure created', 'success')
 
             return redirect(
                 url_for('admin.measure_detail', year=form_mod.date.year,
@@ -71,7 +72,7 @@ def delete_measure(year, number):
 
     if measure:
         measure.delete()
-        flash('Measure deleted')
+        flash('Measure deleted', 'success')
         return redirect('/admin')
     else:
         abort(404)
@@ -102,21 +103,39 @@ def measure_detail(year, number):
         if form.validate():
             measure_mod.update(**form.data)
 
-            yes_votes = [x or 0 for x in request.form.getlist('yes_votes')]
-            no_votes = [x or 0 for x in request.form.getlist('no_votes')]
+            if (
+                request.form.get('yes_votes_bulk') and
+                request.form.get('no_votes_bulk')
+            ):
+                yes_votes = parse_bulk_update_text(
+                    request.form.get('yes_votes_bulk')
+                )
+                no_votes = parse_bulk_update_text(
+                    request.form.get('no_votes_bulk')
+                )
+
+                if len(no_votes) != len(counties) and len(yes_votes) != len(counties):
+                    flash('Provided bulk measures do not '
+                          'match amount of counties', 'danger')
+                    return redirect(
+                        url_for('admin.measure_detail', year=year, number=number)
+                    )
+            else:
+                yes_votes = [x or 0 for x in request.form.getlist('yes_votes')]
+                no_votes = [x or 0 for x in request.form.getlist('no_votes')]
 
             if yes_votes and no_votes:
                 update_measure_results(
                     measure_mod.measure_id, yes_votes, no_votes, counties
                 )
 
-            flash('Measure results saved')
+            flash('Measure results saved', 'success')
 
             return redirect(
                 url_for('admin.measure_detail', year=year, number=number)
             )
 
-        flash('Form errors')
+        flash('Form errors', 'danger')
 
     measure_link = url_for('public.measure_detail', measure=measure_mod.number,
                            year=measure_mod.date.year)

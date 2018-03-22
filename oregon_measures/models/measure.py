@@ -1,5 +1,10 @@
 from datetime import datetime
+from oregon_measures.utils import parse_bulk_update_text
 from oregon_measures.app import get_db
+
+
+class MeasureValidationError(Exception):
+    pass
 
 
 def get_measures(filters: dict) -> list:
@@ -62,7 +67,7 @@ def get_measures(filters: dict) -> list:
     } for row in cursor.fetchall()]
 
 
-def get_measure(year: int, number: int) -> dict:
+def get_measure(year: int, number: str) -> dict:
     """
     Get single measure
     """
@@ -96,7 +101,7 @@ def get_measure(year: int, number: int) -> dict:
         return meas[0]
 
 
-def update_measure_results(measure_id: str, yes_votes: list,
+def update_measure_results(measure_id: int, yes_votes: list,
                            no_votes: list, counties: list):
     """Bulk update measure results"""
     db = get_db()
@@ -113,7 +118,7 @@ def update_measure_results(measure_id: str, yes_votes: list,
 
     cursor.executemany(
         'INSERT INTO measure_by_county '
-        '(measure_id, county_id, yes_votes, no_votes)'
+        '(measure_id, county_id, yes_votes, no_votes) '
         'VALUES (%s, %s, %s, %s)',
         data
     )
@@ -142,11 +147,35 @@ class Measure:
         """
         Update object based on kwarg values and then save
         """
-        self.description = kwargs.get('description')
-        self.number = kwargs.get('number')
-        self.date = kwargs.get('date')
+        for key, val in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, val)
 
         self.save()
+
+    def update_results(self, data, counties):
+        """
+        Update the results associated with measure
+        """
+        if data.get('yes_votes_bulk') and data.get('no_votes_bulk'):
+            yes_votes = parse_bulk_update_text(
+                data.get('yes_votes_bulk')
+            )
+            no_votes = parse_bulk_update_text(
+                data.get('no_votes_bulk')
+            )
+
+            if len(no_votes) != len(counties) and len(yes_votes) != len(counties):
+                raise MeasureValidationError(
+                    'Provided bulk measures do not match amount of counties')
+        else:
+            yes_votes = [x or 0 for x in data.getlist('yes_votes')]
+            no_votes = [x or 0 for x in data.getlist('no_votes')]
+
+        if yes_votes and no_votes:
+            update_measure_results(
+                self.measure_id, yes_votes, no_votes, counties
+            )
 
     def save(self):
         if self.date and self.number and self.description:
@@ -186,6 +215,12 @@ class Measure:
                            (self.measure_id, ))
 
             db.commit()
+
+    def json(self) -> dict:
+        """
+        Return JSON serializable representation of this object
+        """
+        return get_measure(self.date.year, self.number)
 
     @classmethod
     def find(cls, year, number):

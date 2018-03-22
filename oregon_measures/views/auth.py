@@ -5,7 +5,7 @@ from flask import (
 )
 from flask_login import (
     login_required, login_user,
-    logout_user, confirm_login
+    logout_user
 )
 
 from oregon_measures.models.auth import User
@@ -30,7 +30,6 @@ def login():
                 remember = request.form.get("remember", "no") == "yes"
 
                 if login_user(user, remember=remember):
-                    flash("Logged in!")
                     return redirect('/admin')
 
         flash("unable to log you in")
@@ -42,7 +41,7 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("Logged out.")
+    flash("Logged out.", 'success')
     return redirect('/login')
 
 

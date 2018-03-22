@@ -1,15 +1,15 @@
 from flask import (
-    Blueprint, render_template, request, redirect, url_for, flash, abort
+    Blueprint, render_template, request, redirect, url_for, flash, abort,
+    jsonify
 )
 
 from flask_login import login_required
 
 from oregon_measures.models.measure import (
-    get_measures, get_measure, Measure, update_measure_results
+    get_measures, get_measure, Measure, MeasureValidationError
 )
 from oregon_measures.models.county import get_counties
 from oregon_measures.forms.admin import MeasureForm
-from oregon_measures.utils import parse_bulk_update_text
 
 admin = Blueprint(
     'admin', __name__, template_folder='templates',
@@ -82,7 +82,19 @@ def delete_measure(year, number):
 @login_required
 def measure_detail(year, number):
     """
-    Render the admin index
+    Measure detail page and update form.
+
+    This view function displays a view of the current measure
+    and supports methods for updating the measure.
+
+    Forms values can be:
+        - number (string)
+        - date (string)
+        - description (string)
+        - yes_votes_bulk (string) - new line separated list of votes
+        - no_votes_bulk (string) - new line separated list of votes
+        - yes_votes (array)
+        - no_votes (array)
     """
     year = parse_int(year)
     measure = get_measure(year, number)
@@ -101,41 +113,20 @@ def measure_detail(year, number):
 
     if request.method == 'POST':
         if form.validate():
-            measure_mod.update(**form.data)
+            try:
+                measure_mod.update(**form.data)
+                measure_mod.update_results(request.form, counties)
+                flash('Measure results saved', 'success')
 
-            if (
-                request.form.get('yes_votes_bulk') and
-                request.form.get('no_votes_bulk')
-            ):
-                yes_votes = parse_bulk_update_text(
-                    request.form.get('yes_votes_bulk')
-                )
-                no_votes = parse_bulk_update_text(
-                    request.form.get('no_votes_bulk')
+                return redirect(
+                    url_for('admin.measure_detail', year=measure_mod.date.year,
+                            number=measure_mod.number)
                 )
 
-                if len(no_votes) != len(counties) and len(yes_votes) != len(counties):
-                    flash('Provided bulk measures do not '
-                          'match amount of counties', 'danger')
-                    return redirect(
-                        url_for('admin.measure_detail', year=year, number=number)
-                    )
-            else:
-                yes_votes = [x or 0 for x in request.form.getlist('yes_votes')]
-                no_votes = [x or 0 for x in request.form.getlist('no_votes')]
-
-            if yes_votes and no_votes:
-                update_measure_results(
-                    measure_mod.measure_id, yes_votes, no_votes, counties
-                )
-
-            flash('Measure results saved', 'success')
-
-            return redirect(
-                url_for('admin.measure_detail', year=year, number=number)
-            )
-
-        flash('Form errors', 'danger')
+            except MeasureValidationError as exc:
+                flash(exc, 'danger')
+        else:
+            flash('Form errors', 'danger')
 
     measure_link = url_for('public.measure_detail', measure=measure_mod.number,
                            year=measure_mod.date.year)
@@ -145,3 +136,27 @@ def measure_detail(year, number):
     return render_template('admin/measure.html', form=form,
                            measure_link=measure_link, delete_link=delete_link,
                            measure=measure, counties=counties)
+
+
+@admin.route("/api/measure/<year>/<number>", methods=["GET", "POST"])
+def measure_detail_api(year, number):
+    """
+    API endpoint for updating a measure
+    """
+    year = parse_int(year)
+    measure = Measure.find(year, number)
+    counties = get_counties()
+
+    print(request.form)
+    if not measure:
+        abort(404)
+
+    if request.method == 'POST':
+        try:
+            measure.update(**request.form)
+            measure.update_results(request.form, counties)
+        except MeasureValidationError as exc:
+            abort(400, exc)
+
+    return jsonify(measure.json())
+
